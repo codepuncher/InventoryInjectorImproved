@@ -1,0 +1,116 @@
+name: Nexus Mods Upload
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without 'v' prefix (e.g. 1.0.0, 1.0.0-rc.1, 1.0.0+build.1)"
+        type: string
+        required: true
+
+permissions: {}
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Resolve version
+        id: version
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          VERSION="${VERSION:-$INPUT_VERSION}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$ ]]; then
+            echo "Error: version must be in format X.Y.Z (optionally with prerelease/build metadata, e.g. 1.0.0-rc.1+build.1) without 'v' prefix" >&2
+            exit 1
+          fi
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: v${{ steps.version.outputs.value }}
+
+      - name: Compute cliff range
+        id: range
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          PREV="$(git describe --abbrev=0 --tags "v${VERSION}^" 2>/dev/null || echo "")"
+          if [[ -n "$PREV" ]]; then
+            echo "value=${PREV}..v${VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=v${VERSION}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate release notes
+        id: cliff
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --strip header ${{ steps.range.outputs.value }}
+        env:
+          GITHUB_REPO: ${{ github.repository }}
+
+      - name: Download release artifact
+        id: artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          NAME="$(grep -oP 'PROPERTIES OUTPUT_NAME \K[\w-]+' CMakeLists.txt)"
+          if [[ -z "$NAME" ]]; then
+            echo "Error: failed to extract OUTPUT_NAME from CMakeLists.txt" >&2
+            exit 1
+          fi
+          ZIP="dist/${NAME}-${VERSION}.zip"
+          DOWNLOADED=false
+          for i in {1..6}; do
+            if gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --pattern "${NAME}-${VERSION}.zip" --dir dist/; then
+              DOWNLOADED=true
+              break
+            fi
+            if [[ $i -lt 6 ]]; then
+              echo "Asset not yet available, retrying in 10s..." >&2
+              sleep 10
+            fi
+          done
+          if [[ "$DOWNLOADED" != "true" ]]; then
+            echo "Error: asset download failed after all retries" >&2
+            exit 1
+          fi
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+
+      - name: Strip release notes to plain text
+        id: notes
+        shell: bash
+        env:
+          NOTES: ${{ steps.cliff.outputs.content }}
+        run: |
+          DELIM="$(dd if=/dev/urandom bs=15 count=1 status=none | base64)"
+          printf 'notes<<%s\n' "$DELIM" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "${NOTES//## /}" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$DELIM" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to Nexus Mods
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.10
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ secrets.NEXUSMODS_FILE_ID }}
+          filename: ${{ steps.artifact.outputs.zip }}
+          display_name: ${{ github.event.repository.name }}
+          description: ${{ steps.notes.outputs.notes }}
+          version: ${{ steps.version.outputs.value }}
+          archive_existing_version: true

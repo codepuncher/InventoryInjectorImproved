@@ -1,0 +1,34 @@
+Checks: >
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  cert-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-type-vararg,
+  -readability-braces-around-statements,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
+  -readability-implicit-bool-conversion,
+  -modernize-use-trailing-return-type,
+  -bugprone-easily-swappable-parameters,
+  -cert-err58-cpp,
+  -performance-enum-size,
+  -clang-analyzer-optin.core.EnumCastOutOfRange
+
+# EnumCastOutOfRange fires a false positive inside the MSVC STL bitmask-enum ops
+# (xwin's xfilesystem_abi.h, reached via <filesystem>). The diagnostic lands in that
+# system header, which neither HeaderFilterRegex nor a NOLINT can reach, so the whole
+# opt-in check must be off. With it off, keep int->enum casts on untrusted bytes
+# range-guarded at their sites (see CacheSerialization.h deserialize, guarded before
+# the cast).
+HeaderFilterRegex: '^(?!.*(extern|imgui|RE|SKSE|CommonLibSSE|spdlog)).*'
+FormatStyle: file
+WarningsAsErrors: ''
+

@@ -1,0 +1,8 @@
+# Test sources are built natively (test-linux preset, system GCC + Catch2),
+# not cross-compiled. Use that build's compile DB and re-force the native
+# target so the repo-root .clangd's Windows target does not win for these files.
+
+CompileFlags:
+  CompilationDatabase: ../build/test-linux
+  Add:
+    - "--target=x86_64-pc-linux-gnu"

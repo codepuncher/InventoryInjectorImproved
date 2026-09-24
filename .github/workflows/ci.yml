@@ -1,0 +1,251 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: read
+
+    outputs:
+      src:    ${{ steps.filter.outputs.src }}
+      tests:  ${{ steps.filter.outputs.tests }}
+      format: ${{ steps.filter.outputs.format }}
+      tidy:   ${{ steps.filter.outputs.tidy }}
+      cmake:  ${{ steps.filter.outputs.cmake }}
+      ci:     ${{ steps.filter.outputs.ci }}
+
+    steps:
+      - uses: dorny/paths-filter@v4
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          filters: |
+            src:
+              - 'src/**'
+            tests:
+              - 'test/**'
+            format:
+              - '.clang-format'
+            tidy:
+              - '.clang-tidy'
+            cmake:
+              - 'CMakeLists.txt'
+              - 'CMakePresets.json'
+              - 'cmake/**'
+              - 'vcpkg.json'
+            ci:
+              - '.github/workflows/ci.yml'
+
+  clang-format:
+    needs: [changes]
+    runs-on: ubuntu-latest
+
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.src == 'true' ||
+      needs.changes.outputs.tests == 'true' ||
+      needs.changes.outputs.format == 'true' ||
+      needs.changes.outputs.ci == 'true'
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: jidicula/clang-format-action@v4.18.0
+        with:
+          clang-format-version: '22'
+          check-path: src
+
+      - uses: jidicula/clang-format-action@v4.18.0
+        with:
+          clang-format-version: '22'
+          check-path: test
+
+  test:
+    needs: [changes, clang-format]
+    runs-on: windows-latest
+
+    if: >-
+      always() &&
+      (needs.clang-format.result == 'success' || needs.clang-format.result == 'skipped') &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        needs.changes.outputs.src == 'true' ||
+        needs.changes.outputs.tests == 'true' ||
+        needs.changes.outputs.cmake == 'true' ||
+        needs.changes.outputs.ci == 'true'
+      )
+
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Install CMake and Ninja
+        uses: lukka/get-cmake@latest
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v6
+        with:
+          path: C:\vcpkg-cache
+          key: vcpkg-tests-${{ hashFiles('vcpkg.json', 'cmake/triplets/**', 'cmake/ports/**') }}
+          restore-keys: vcpkg-tests-
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/lib/vcpkg
+        env:
+          VCPKG_BINARY_SOURCES: "clear;files,C:\\vcpkg-cache,readwrite"
+
+      - name: Configure and Build Tests
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: test-windows
+          buildPreset: test-windows
+        env:
+          VCPKG_BINARY_SOURCES: "clear;files,C:\\vcpkg-cache,readwrite"
+
+      - name: Run Tests
+        run: ctest --preset test-windows
+
+  build:
+    needs: [changes, clang-format]
+    runs-on: windows-latest
+
+    if: >-
+      always() &&
+      (needs.clang-format.result == 'success' || needs.clang-format.result == 'skipped') &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        needs.changes.outputs.src == 'true' ||
+        needs.changes.outputs.cmake == 'true' ||
+        needs.changes.outputs.ci == 'true'
+      )
+
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install CMake and Ninja
+        uses: lukka/get-cmake@latest
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v6
+        with:
+          path: C:\vcpkg-cache
+          key: vcpkg-${{ hashFiles('vcpkg.json', 'cmake/triplets/**', 'cmake/ports/**') }}
+          restore-keys: vcpkg-
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/lib/vcpkg
+        env:
+          VCPKG_BINARY_SOURCES: "clear;files,C:\\vcpkg-cache,readwrite"
+
+      - name: Configure and Build
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: release-windows
+          buildPreset: release-windows
+        env:
+          VCPKG_BINARY_SOURCES: "clear;files,C:\\vcpkg-cache,readwrite"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ github.event.repository.name }}
+          retention-days: 7
+          path: |
+            build/msvc/*.dll
+            build/msvc/*.pdb
+
+  clang-tidy:
+    needs: [changes, clang-format, build, test]
+    runs-on: windows-latest
+
+    if: >-
+      always() &&
+      (needs.clang-format.result == 'success' || needs.clang-format.result == 'skipped') &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+      (needs.test.result == 'success' || needs.test.result == 'skipped') &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        needs.changes.outputs.src == 'true' ||
+        needs.changes.outputs.tidy == 'true' ||
+        needs.changes.outputs.cmake == 'true' ||
+        needs.changes.outputs.ci == 'true'
+      )
+
+    permissions:
+      contents: read
+      actions: write
+
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "20"
+
+      - uses: lukka/get-cmake@latest
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v6
+        with:
+          path: C:\vcpkg-cache
+          key: vcpkg-${{ hashFiles('vcpkg.json', 'cmake/triplets/**', 'cmake/ports/**') }}
+          restore-keys: vcpkg-
+
+      - uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/lib/vcpkg
+        env:
+          VCPKG_BINARY_SOURCES: "clear;files,C:\\vcpkg-cache,readwrite"
+
+      - name: Configure
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: tidy-windows
+        env:
+          VCPKG_BINARY_SOURCES: "clear;files,C:\\vcpkg-cache,readwrite"
+
+      - name: Run clang-tidy
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Path src -Include *.cpp -Recurse |
+            Select-Object -ExpandProperty FullName
+          clang-tidy.exe -p build/tidy $files
