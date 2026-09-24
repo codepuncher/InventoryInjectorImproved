@@ -26,6 +26,8 @@ I5 aims to fix and improve I4, starting with its performance issues, such as the
 
 I4 rebuilds every item's icon data each time a menu's item list refreshes, which takes about 90ms for about 200 items. I5 caches that work per item, so each refresh only processes new items. The cache is saved with your game, so the first menu open after loading a save is fast too.
 
+I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1 on Skyrim versions before 1.7.
+
 [font=Times New Roman][size=4]MENUS COVERED[/size][/font]
 [list]
 [*]Player inventory
@@ -77,8 +79,11 @@ I4 rebuilds every item's icon data each time a menu's item list refreshes, which
 [/list]
 
 [font=Times New Roman][size=5]FAQ[/size][/font]
-[b]Why isn't the Favorites menu covered?[/b]
-[spoiler]The Favorites menu is a small list that's rarely heavy, so caching it would save little. I5 does not cache Favorites for this reason.[/spoiler]
+[b]Does I5 fix the favorites menu CTD?[/b]
+[spoiler]Yes, a patch is included in I5 for this issue and will be removed once it's fixed upstream in I4.[/spoiler]
+
+[b]Why doesn't I5 speed up the Favorites menu?[/b]
+[spoiler]The Favorites menu is a small list that's rarely heavy, so caching it would save little.[/spoiler]
 
 [b]Is it safe to add or remove mid-playthrough?[/b]
 [spoiler]Yes. I5 has no ESP and changes no game records. Its co-save only holds the icon cache: on a save without one, the cache fills as you open menus, and if you remove I5, SKSE skips its co-save data.[/spoiler]
