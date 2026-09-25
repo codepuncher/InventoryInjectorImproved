@@ -114,7 +114,7 @@ namespace InventoryInjectorImproved::I4Hook
 		constexpr std::uint32_t kConfigReadChunkBytes = 64U * 1024U;
 
 		// Bump when the serialized format or the delta-capture logic changes.
-		constexpr std::uint32_t kSchemaVersion = 2;
+		constexpr std::uint32_t kSchemaVersion = 3;
 
 		/**
 		 * v1 does not read I4's DLL version at runtime; the config-bytes hash plus
@@ -447,7 +447,7 @@ namespace InventoryInjectorImproved::I4Hook
 
 				const ClassifyResult cr = ClassifyEntries(a_params, entryList, count, wantLog);
 
-				const std::int64_t i4_us = ProcessMisses(a_params, cr.misses);
+				const std::int64_t i4_us = ProcessMisses(a_params, args, cr.misses);
 
 				const auto         t2 = std::chrono::high_resolution_clock::now();
 				const std::int64_t total_us = std::chrono::duration_cast<std::chrono::microseconds>(t2 - cr.started).count();
@@ -629,7 +629,43 @@ namespace InventoryInjectorImproved::I4Hook
 				}
 			}
 
-			std::int64_t ProcessMisses(Params& a_params, const std::vector<Miss>& a_misses)
+			/**
+			 * Runs I4 over the misses on the real list object with its entry array
+			 * temporarily swapped for the misses. SkyUI's crafting icon setter assigns
+			 * no iconLabel when handed a stand-in list object, so the stand-in is only
+			 * a fallback for lists whose entryList does not read through _entryList.
+			 */
+			bool InvokeOnMisses(Params& a_params, std::span<RE::GFxValue> a_args, const RE::GFxValue& a_missArr)
+			{
+				RE::GFxValue& list = a_args.front();
+				RE::GFxValue  saved;
+				if (!list.GetMember("_entryList", &saved) || !saved.IsArray() || !list.SetMember("_entryList", a_missArr)) {
+					return InvokeOnStandIn(a_params, a_missArr);
+				}
+
+				RE::GFxValue seen;
+				const bool   swapped = list.GetMember("entryList", &seen) && seen == a_missArr;
+				const bool   ok = swapped && InvokeOriginal(a_params, a_args);
+				if (!list.SetMember("_entryList", saved)) {
+					logger::error("I4Hook: failed to restore _entryList after processing misses");
+				}
+				if (!swapped) {
+					return InvokeOnStandIn(a_params, a_missArr);
+				}
+				return ok;
+			}
+
+			bool InvokeOnStandIn(Params& a_params, const RE::GFxValue& a_missArr)
+			{
+				RE::GFxValue standIn;
+				a_params.movie->CreateObject(&standIn);
+				standIn.SetMember("_entryList", a_missArr);
+				standIn.SetMember("entryList", a_missArr);
+				std::array<RE::GFxValue, 1> listArg{ standIn };
+				return InvokeOriginal(a_params, listArg);
+			}
+
+			std::int64_t ProcessMisses(Params& a_params, std::span<RE::GFxValue> a_args, const std::vector<Miss>& a_misses)
 			{
 				if (a_misses.empty()) {
 					return 0;
@@ -641,16 +677,10 @@ namespace InventoryInjectorImproved::I4Hook
 					missArr.PushBack(m.entry);
 				}
 
-				RE::GFxValue tempList;
-				a_params.movie->CreateObject(&tempList);
-				tempList.SetMember("_entryList", missArr);
-				tempList.SetMember("entryList", missArr);
-
-				std::array<RE::GFxValue, 1> listArg{ tempList };
-				const auto                  i0 = std::chrono::high_resolution_clock::now();
-				const bool                  ok = InvokeOriginal(a_params, listArg);
-				const auto                  i1 = std::chrono::high_resolution_clock::now();
-				const auto                  i4_us = std::chrono::duration_cast<std::chrono::microseconds>(i1 - i0).count();
+				const auto i0 = std::chrono::high_resolution_clock::now();
+				const bool ok = InvokeOnMisses(a_params, a_args, missArr);
+				const auto i1 = std::chrono::high_resolution_clock::now();
+				const auto i4_us = std::chrono::duration_cast<std::chrono::microseconds>(i1 - i0).count();
 
 				/**
 				 * Cache only if I4 ran; an empty delta would later serve the item
