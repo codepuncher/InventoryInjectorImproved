@@ -44,6 +44,8 @@ python3 scripts/generate-nexus-page.py | pbcopy                       # macOS
 3. Add to your repository as secrets (Settings → Secrets → Actions):
    - `NEXUSMODS_API_KEY`: your Nexus Mods API key
    - `NEXUSMODS_FILE_ID`: the file ID
+4. Add a repository variable (Settings → Variables → Actions):
+   - `NEXUSMODS_DISPLAY_NAME`: the file name shown on Nexus
 
 ## CI
 

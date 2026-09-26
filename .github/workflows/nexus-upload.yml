@@ -93,6 +93,16 @@ jobs:
           fi
           echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
 
+      - name: Check display name
+        shell: bash
+        env:
+          DISPLAY_NAME: ${{ vars.NEXUSMODS_DISPLAY_NAME }}
+        run: |
+          if [[ -z "$DISPLAY_NAME" ]]; then
+            echo "Error: repository variable NEXUSMODS_DISPLAY_NAME is not set" >&2
+            exit 1
+          fi
+
       - name: Strip release notes to plain text
         id: notes
         shell: bash
@@ -110,7 +120,8 @@ jobs:
           api_key: ${{ secrets.NEXUSMODS_API_KEY }}
           file_id: ${{ secrets.NEXUSMODS_FILE_ID }}
           filename: ${{ steps.artifact.outputs.zip }}
-          display_name: ${{ github.event.repository.name }}
+          display_name: ${{ vars.NEXUSMODS_DISPLAY_NAME }}
           description: ${{ steps.notes.outputs.notes }}
           version: ${{ steps.version.outputs.value }}
           archive_existing_version: true
+          update_mod_version: true
