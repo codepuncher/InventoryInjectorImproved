@@ -124,3 +124,4 @@ jobs:
           description: ${{ steps.notes.outputs.notes }}
           version: ${{ steps.version.outputs.value }}
           archive_existing_version: true
+          update_mod_version: true
