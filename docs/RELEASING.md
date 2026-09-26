@@ -27,9 +27,8 @@ To update the Nexus page:
 ```bash
 python3 scripts/generate-nexus-page.py
 
-# Or pipe straight to the clipboard:
-python3 scripts/generate-nexus-page.py | xclip -selection clipboard  # Linux
-python3 scripts/generate-nexus-page.py | pbcopy                       # macOS
+# Or copy straight to the clipboard (wl-copy, xclip, xsel or pbcopy):
+python3 scripts/generate-nexus-page.py --copy
 ```
 
 4. Paste the output into the Nexus Mods page editor.
