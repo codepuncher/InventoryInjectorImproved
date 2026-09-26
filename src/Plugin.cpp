@@ -1,6 +1,7 @@
 #include "PCH.h"
 
 #include "ConsoleHook.h"
+#include "FavoritesCrashFix.h"
 #include "FrameProbe.h"
 #include "I4Hook.h"
 #include "InvalidateListFix.h"
@@ -154,6 +155,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 	SKSE::AllocTrampoline(InventoryInjectorImproved::kTrampolineSize);
 
 	InventoryInjectorImproved::ConsoleHook::Install();
+	InventoryInjectorImproved::FavoritesCrashFix::Install();
 	InventoryInjectorImproved::FrameProbe::Install();
 
 	const auto& trampoline = SKSE::GetTrampoline();

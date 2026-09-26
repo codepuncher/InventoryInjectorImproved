@@ -30,7 +30,8 @@ if(PLUGIN_TESTS_ONLY)
         test/CacheFingerprintTests.cpp
         test/FrameSpikeTests.cpp
         test/CategoryFlagsTests.cpp
-        test/InvalidateFingerprintTests.cpp)
+        test/InvalidateFingerprintTests.cpp
+        test/SkyUIConfigTests.cpp)
 
     target_include_directories(${PROJECT_NAME}Tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
@@ -97,6 +98,7 @@ else()
         src/Plugin.cpp
         src/I4Hook.cpp
         src/ConsoleHook.cpp
+        src/FavoritesCrashFix.cpp
         src/InvalidateListFix.cpp
         src/InvalidateMemo.cpp
         "${CMAKE_CURRENT_BINARY_DIR}/src/version.rc"

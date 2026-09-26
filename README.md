@@ -9,6 +9,8 @@ tabs or using/dropping an item lags, badly in large inventories (~90 ms per refr
 per-item work keyed by form, cutting the per-refresh cost to a few milliseconds. It changes
 no game data and ships no SWFs, so it has no file conflicts.
 
+I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1 on Skyrim versions before 1.7.
+
 ---
 
 <!-- nexus:start -->
@@ -60,9 +62,11 @@ load order change. A diagnostic log is written to
 `Documents/My Games/Skyrim Special Edition/SKSE/InventoryInjectorImproved.log`
 (`Skyrim Special Edition GOG` on the GOG version).
 
-## Why not the Favorites menu?
+## Favorites menu
 
-The Favorites menu is a small list that's rarely heavy, so caching it would save little.
+A fix is included in I5 to prevent the crash to desktop that happens when opening the favorites menu with I4 1.1.1 on game versions before 1.7.
+
+I5 doesn't cache Favorites because it's a small list that's rarely heavy, so caching it would save little.
 
 ## Console commands
 
