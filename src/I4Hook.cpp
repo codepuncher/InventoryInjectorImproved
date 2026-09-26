@@ -629,56 +629,69 @@ namespace InventoryInjectorImproved::I4Hook
 				}
 			}
 
-			/**
-			 * Runs I4 over the misses on the real list object with its entry array
-			 * temporarily swapped for the misses. SkyUI's crafting icon setter assigns
-			 * no iconLabel when handed a stand-in list object, so the stand-in is only
-			 * a fallback for lists whose entryList does not read through _entryList.
-			 */
-			bool InvokeOnMisses(Params& a_params, std::span<RE::GFxValue> a_args, const RE::GFxValue& a_missArr)
+			static bool SwapEntries(RE::GFxValue& a_list, const RE::GFxValue& a_original, const RE::GFxValue& a_missArr)
 			{
-				RE::GFxValue& list = a_args.front();
-				RE::GFxValue  saved;
-				if (!list.GetMember("_entryList", &saved) || !saved.IsArray() || !list.SetMember("_entryList", a_missArr)) {
-					return InvokeOnStandIn(a_params, a_missArr);
+				if (!a_list.SetMember("_entryList", a_missArr)) {
+					return false;
 				}
-
 				RE::GFxValue seen;
-				const bool   swapped = list.GetMember("entryList", &seen) && seen == a_missArr;
-				const bool   ok = swapped && InvokeOriginal(a_params, a_args);
-				if (!list.SetMember("_entryList", saved)) {
-					logger::error("I4Hook: failed to restore _entryList after processing misses");
+				if (a_list.GetMember("entryList", &seen) && seen == a_missArr) {
+					return true;
 				}
-				if (!swapped) {
-					return InvokeOnStandIn(a_params, a_missArr);
+				if (!a_list.SetMember("_entryList", a_original)) {
+					logger::error("I4Hook: failed to restore _entryList after a failed swap");
 				}
-				return ok;
+				return false;
 			}
 
-			bool InvokeOnStandIn(Params& a_params, const RE::GFxValue& a_missArr)
+			std::int64_t RunUncached(Params& a_params, std::span<RE::GFxValue> a_args)
 			{
-				RE::GFxValue standIn;
-				a_params.movie->CreateObject(&standIn);
-				standIn.SetMember("_entryList", a_missArr);
-				standIn.SetMember("entryList", a_missArr);
-				std::array<RE::GFxValue, 1> listArg{ standIn };
-				return InvokeOriginal(a_params, listArg);
+				const auto i0 = std::chrono::high_resolution_clock::now();
+				CallOriginal(a_params, a_args);
+				const auto i1 = std::chrono::high_resolution_clock::now();
+				return std::chrono::duration_cast<std::chrono::microseconds>(i1 - i0).count();
 			}
 
+			/**
+			 * I4 must see the real list object: icon setters compiled with getter calls
+			 * (Crafting Categories for SkyUI, NORDIC UI) read it via
+			 * a_list.__get__entryList(), a list-class method a plain stand-in object
+			 * lacks. A list whose entries cannot be swapped runs I4 over every entry,
+			 * uncached.
+			 */
 			std::int64_t ProcessMisses(Params& a_params, std::span<RE::GFxValue> a_args, const std::vector<Miss>& a_misses)
 			{
 				if (a_misses.empty()) {
 					return 0;
 				}
 
+				RE::GFxValue& list = a_args.front();
+				RE::GFxValue  entries;
+				if (!list.GetMember("_entryList", &entries) || !entries.IsArray()) {
+					return RunUncached(a_params, a_args);
+				}
+
 				RE::GFxValue missArr;
 				a_params.movie->CreateArray(&missArr);
 				for (const auto& m : a_misses) {
-					missArr.PushBack(m.entry);
+					if (!missArr.PushBack(m.entry)) {
+						return RunUncached(a_params, a_args);
+					}
+				}
+				if (!SwapEntries(list, entries, missArr)) {
+					return RunUncached(a_params, a_args);
 				}
 
 				const auto i0 = std::chrono::high_resolution_clock::now();
-				const bool ok = InvokeOnMisses(a_params, a_args, missArr);
+				bool       ok = false;
+				{
+					const auto restore = SKSE::stl::scope_exit([&list, &entries] {
+						if (!list.SetMember("_entryList", entries)) {
+							logger::error("I4Hook: failed to restore _entryList after processing misses");
+						}
+					});
+					ok = InvokeOriginal(a_params, a_args);
+				}
 				const auto i1 = std::chrono::high_resolution_clock::now();
 				const auto i4_us = std::chrono::duration_cast<std::chrono::microseconds>(i1 - i0).count();
 
