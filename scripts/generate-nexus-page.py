@@ -7,12 +7,15 @@ of docs/nexus-page.md in memory, and prints the result to stdout.
 
 Usage:
     python3 scripts/generate-nexus-page.py
-    python3 scripts/generate-nexus-page.py | xclip -selection clipboard
+    python3 scripts/generate-nexus-page.py --copy
 """
 
 import argparse
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 README = Path(__file__).parent.parent / "README.md"
@@ -24,6 +27,13 @@ GEN_START = "<!-- generated:start -->"
 GEN_END = "<!-- generated:end -->"
 BBCODE_FENCE_OPEN = "```bbcode"
 BBCODE_FENCE_CLOSE = "```"
+CLIPBOARD_COMMANDS = [
+    ["wl-copy"],
+    ["xclip", "-selection", "clipboard"],
+    ["xsel", "--clipboard", "--input"],
+    ["pbcopy"],
+]
+CLIPBOARD_TIMEOUT_SECONDS = 10
 
 
 def extract_block(text: str, start_marker: str, end_marker: str) -> str:
@@ -144,11 +154,47 @@ def inject_generated(bbcode_content: str, generated: str) -> str:
     )
 
 
+def try_copy(command: list[str], text: str) -> bool:
+    # Forked clipboard servers hold inherited pipes open, so stderr goes to a file.
+    with tempfile.TemporaryFile() as stderr:
+        try:
+            subprocess.run(
+                command,
+                input=text.encode("utf-8"),
+                stdout=subprocess.DEVNULL,
+                stderr=stderr,
+                check=True,
+                timeout=CLIPBOARD_TIMEOUT_SECONDS,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            stderr.seek(0)
+            detail = stderr.read().decode("utf-8", errors="replace").strip() or str(exc)
+            print(f"warning: {command[0]} failed: {detail}", file=sys.stderr)
+            return False
+    return True
+
+
+def copy_to_clipboard(text: str) -> None:
+    installed = [cmd for cmd in CLIPBOARD_COMMANDS if shutil.which(cmd[0])]
+    if not installed:
+        tried = ", ".join(cmd[0] for cmd in CLIPBOARD_COMMANDS)
+        sys.exit(f"error: no clipboard tool found (tried {tried})")
+    if any(try_copy(cmd, text) for cmd in installed):
+        return
+    sys.exit("error: every installed clipboard tool failed")
+
+
 def main() -> None:
-    argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
-    ).parse_args()
+    )
+    parser.add_argument(
+        "--copy",
+        action="store_true",
+        help="copy the output to the clipboard instead of printing it",
+    )
+    args = parser.parse_args()
 
     readme = README.read_text(encoding="utf-8")
     template = NEXUS_TEMPLATE.read_text(encoding="utf-8")
@@ -160,7 +206,12 @@ def main() -> None:
     result = inject_generated(bbcode_content, bbcode_generated)
     result = result.replace(GEN_START + "\n", "", 1).replace("\n" + GEN_END, "", 1)
 
-    print(result)
+    if not args.copy:
+        print(result)
+        return
+
+    copy_to_clipboard(result)
+    print("copied to clipboard", file=sys.stderr)
 
 
 if __name__ == "__main__":
