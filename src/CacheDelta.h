@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -38,4 +39,16 @@ namespace InventoryInjectorImproved
 		CacheSetter   setter{ CacheSetter::kInventory };
 		Delta         delta;
 	};
+
+	/**
+	 * True if the delta explicitly sets iconLabel to a value (not deletes it).
+	 * A delta missing this is not safe to cache: replaying it on a fresh entry
+	 * (which starts with no iconLabel of its own) would leave the item icon-less.
+	 */
+	[[nodiscard]] inline bool DeltaSetsIconLabel(const Delta& a_delta)
+	{
+		return std::ranges::any_of(a_delta, [](const CachedField& a_f) {
+			return a_f.name == "iconLabel" && a_f.kind != CachedField::Kind::kDelete;
+		});
+	}
 }

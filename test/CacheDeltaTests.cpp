@@ -22,3 +22,24 @@ TEST_CASE("CacheEntry holds a decoded entry and its delta", "[cachedelta]")
 	REQUIRE(e.delta.size() == 1);
 	CHECK(e.delta.front().str == "Sword");
 }
+
+TEST_CASE("DeltaSetsIconLabel: true only when iconLabel is set to a real value", "[cachedelta]")
+{
+	using InventoryInjectorImproved::Delta;
+	using InventoryInjectorImproved::DeltaSetsIconLabel;
+
+	Delta withLabel;
+	withLabel.push_back(CachedField{ .name = "iconLabel", .kind = CachedField::Kind::kString, .str = "Sword" });
+	CHECK(DeltaSetsIconLabel(withLabel));
+
+	Delta withOtherFields;
+	withOtherFields.push_back(CachedField{ .name = "iconColor", .kind = CachedField::Kind::kNumber, .number = 1.0 });
+	CHECK_FALSE(DeltaSetsIconLabel(withOtherFields));
+
+	Delta withDeletedLabel;
+	withDeletedLabel.push_back(CachedField{ .name = "iconLabel", .kind = CachedField::Kind::kDelete });
+	CHECK_FALSE(DeltaSetsIconLabel(withDeletedLabel));
+
+	Delta empty;
+	CHECK_FALSE(DeltaSetsIconLabel(empty));
+}
