@@ -4,10 +4,12 @@
 #include <vector>
 
 #include "CacheDelta.h"
+#include "CacheKey.h"
 #include "CacheSerialization.h"
 
 using InventoryInjectorImproved::CachedField;
 using InventoryInjectorImproved::CacheEntry;
+using InventoryInjectorImproved::CacheSetter;
 using InventoryInjectorImproved::Serial::DeserializeEntries;
 using InventoryInjectorImproved::Serial::SerializeEntries;
 
@@ -15,7 +17,7 @@ namespace
 {
 	std::vector<CacheEntry> Sample()
 	{
-		CacheEntry normal{ .formID = 0x0002E4E2, .soulGem = false, .status = 0 };
+		CacheEntry normal{ .formID = 0x0002E4E2, .soulGem = false, .status = 0, .setter = CacheSetter::kInventory };
 		normal.delta.push_back({ .name = "num", .kind = CachedField::Kind::kNumber, .number = 42.5 });
 		normal.delta.push_back({ .name = "txt", .kind = CachedField::Kind::kString, .str = "Iron Sword" });
 		normal.delta.push_back({ .name = "flag", .kind = CachedField::Kind::kBool, .boolean = true });
@@ -25,7 +27,7 @@ namespace
 		kw.keywords = { "WeapTypeSword", "MagicDisallowEnchanting" };
 		normal.delta.push_back(kw);
 
-		CacheEntry gem{ .formID = 0x0002E4E5, .soulGem = true, .status = 2 };
+		CacheEntry gem{ .formID = 0x0002E4E5, .soulGem = true, .status = 2, .setter = CacheSetter::kCrafting };
 		gem.delta.push_back({ .name = "icon", .kind = CachedField::Kind::kString, .str = "soulgem" });
 
 		return { normal, gem };
@@ -50,6 +52,7 @@ TEST_CASE("SerializeEntries round-trips every field kind", "[serial]")
 		CHECK((*out)[i].formID == in[i].formID);
 		CHECK((*out)[i].soulGem == in[i].soulGem);
 		CHECK((*out)[i].status == in[i].status);
+		CHECK((*out)[i].setter == in[i].setter);
 		REQUIRE((*out)[i].delta.size() == in[i].delta.size());
 		for (std::size_t j = 0; j < in[i].delta.size(); ++j) {
 			CHECK(FieldEqual((*out)[i].delta[j], in[i].delta[j]));
@@ -64,14 +67,23 @@ TEST_CASE("DeserializeEntries rejects a truncated buffer", "[serial]")
 	CHECK_FALSE(DeserializeEntries(bytes).has_value());
 }
 
+TEST_CASE("DeserializeEntries rejects an out-of-range setter byte", "[serial]")
+{
+	auto bytes = SerializeEntries(Sample());
+	// Layout: u32 count, then first entry's u32 formID, u8 soulGem, u32 status, then u8 setter.
+	const std::size_t setterOffset = 4 + 4 + 1 + 4;
+	bytes[setterOffset] = static_cast<std::byte>(0x7F);
+	CHECK_FALSE(DeserializeEntries(bytes).has_value());
+}
+
 TEST_CASE("DeserializeEntries rejects an unknown field kind", "[serial]")
 {
 	auto bytes = SerializeEntries(Sample());
 	/**
 	 * Corrupt the first field's kind byte: layout is u32 count, then first entry's
-	 * u32 formID, u8 soulGem, u32 status, u32 fieldCount, then u8 kind.
+	 * u32 formID, u8 soulGem, u32 status, u8 setter, u32 fieldCount, then u8 kind.
 	 */
-	const std::size_t kindOffset = 4 + 4 + 1 + 4 + 4;
+	const std::size_t kindOffset = 4 + 4 + 1 + 4 + 1 + 4;
 	bytes[kindOffset] = static_cast<std::byte>(0x7F);
 	CHECK_FALSE(DeserializeEntries(bytes).has_value());
 }

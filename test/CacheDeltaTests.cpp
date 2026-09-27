@@ -1,9 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "CacheDelta.h"
+#include "CacheKey.h"
 
 using InventoryInjectorImproved::CachedField;
 using InventoryInjectorImproved::CacheEntry;
+using InventoryInjectorImproved::CacheSetter;
 
 TEST_CASE("CachedField defaults to a null field", "[cachedelta]")
 {
@@ -14,7 +16,7 @@ TEST_CASE("CachedField defaults to a null field", "[cachedelta]")
 
 TEST_CASE("CacheEntry holds a decoded entry and its delta", "[cachedelta]")
 {
-	CacheEntry e{ .formID = 0x14, .soulGem = false, .status = 0, .delta = {} };
+	CacheEntry e{ .formID = 0x14, .soulGem = false, .status = 0, .setter = CacheSetter::kInventory, .delta = {} };
 	e.delta.push_back(CachedField{ .name = "iconLabel", .kind = CachedField::Kind::kString, .str = "Sword" });
 	CHECK(e.formID == 0x14u);
 	REQUIRE(e.delta.size() == 1);
