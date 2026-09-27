@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "CacheKey.h"
+
 namespace InventoryInjectorImproved
 {
 	struct CachedField
@@ -33,6 +35,7 @@ namespace InventoryInjectorImproved
 		std::uint32_t formID{ 0 };
 		bool          soulGem{ false };
 		std::uint32_t status{ 0 };
+		CacheSetter   setter{ CacheSetter::kInventory };
 		Delta         delta;
 	};
 }

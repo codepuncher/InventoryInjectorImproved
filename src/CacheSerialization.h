@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "CacheDelta.h"
+#include "CacheKey.h"
 
 namespace InventoryInjectorImproved::Serial
 {
@@ -111,6 +112,17 @@ namespace InventoryInjectorImproved::Serial
 				return true;
 			}
 		};
+
+		/**
+		 * True if a raw wire byte decodes to a defined enumerator of Enum rather
+		 * than a corrupt value. Assumes Enum's members are contiguous from 0 to
+		 * a_max; a gap or reordering in the enum would make this check wrong.
+		 */
+		template <typename Enum>
+		constexpr bool IsValidEnumByte(std::uint8_t a_byte, Enum a_max) noexcept
+		{
+			return a_byte <= static_cast<std::uint8_t>(a_max);
+		}
 	}
 
 	inline std::vector<std::byte> SerializeEntries(const std::vector<CacheEntry>& a_entries)
@@ -122,6 +134,7 @@ namespace InventoryInjectorImproved::Serial
 			PutU32(out, e.formID);
 			PutU8(out, e.soulGem ? 1 : 0);
 			PutU32(out, e.status);
+			PutU8(out, static_cast<std::uint8_t>(e.setter));
 			PutU32(out, static_cast<std::uint32_t>(e.delta.size()));
 			for (const auto& f : e.delta) {
 				PutU8(out, static_cast<std::uint8_t>(f.kind));
@@ -155,7 +168,7 @@ namespace InventoryInjectorImproved::Serial
 	{
 		using namespace detail;
 		// Minimum on-wire bytes per element; bounds reserve() against a corrupt count.
-		constexpr std::size_t kMinEntryBytes = 13;   // u32 formID + u8 soulGem + u32 status + u32 fieldCount
+		constexpr std::size_t kMinEntryBytes = 14;   // u32 formID + u8 soulGem + u32 status + u8 setter + u32 fieldCount
 		constexpr std::size_t kMinFieldBytes = 5;    // u8 kind + u32 name-length prefix
 		constexpr std::size_t kMinKeywordBytes = 4;  // u32 length prefix (empty keyword)
 		Reader                r{ a_bytes };
@@ -169,11 +182,16 @@ namespace InventoryInjectorImproved::Serial
 		for (std::uint32_t i = 0; i < count; ++i) {
 			CacheEntry    e;
 			std::uint8_t  soulGem = 0;
+			std::uint8_t  setterByte = 0;
 			std::uint32_t fieldCount = 0;
-			if (!r.U32(e.formID) || !r.U8(soulGem) || !r.U32(e.status) || !r.U32(fieldCount)) {
+			if (!r.U32(e.formID) || !r.U8(soulGem) || !r.U32(e.status) || !r.U8(setterByte) || !r.U32(fieldCount)) {
 				return std::nullopt;
 			}
 			e.soulGem = soulGem != 0;
+			if (!IsValidEnumByte(setterByte, CacheSetter::kMagic)) {
+				return std::nullopt;
+			}
+			e.setter = static_cast<CacheSetter>(setterByte);
 
 			e.delta.reserve(std::min<std::size_t>(fieldCount, (a_bytes.size() - r.pos) / kMinFieldBytes));
 			for (std::uint32_t j = 0; j < fieldCount; ++j) {
@@ -182,7 +200,7 @@ namespace InventoryInjectorImproved::Serial
 				if (!r.U8(kindByte) || !r.Str(f.name)) {
 					return std::nullopt;
 				}
-				if (kindByte > static_cast<std::uint8_t>(CachedField::Kind::kKeywordObj)) {
+				if (!IsValidEnumByte(kindByte, CachedField::Kind::kKeywordObj)) {
 					return std::nullopt;
 				}
 				f.kind = static_cast<CachedField::Kind>(kindByte);

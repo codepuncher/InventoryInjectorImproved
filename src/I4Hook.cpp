@@ -91,6 +91,25 @@ namespace InventoryInjectorImproved::I4Hook
 		}
 
 		/**
+		 * Maps the literal Scaleform path Inject() is called with (see
+		 * IconSetterForMenu in Plugin.cpp) to the setter identity used to namespace
+		 * the cache. An unrecognized path defaults to kInventory rather than
+		 * failing Inject outright; Inject already logs and bails when the setter
+		 * itself can't be found in the movie, so this only matters for a future
+		 * fourth setter path that forgets to update this map.
+		 */
+		CacheSetter SetterFromPath(const char* a_setterPath)
+		{
+			if (std::strcmp(a_setterPath, "_global.CraftingIconSetter") == 0) {
+				return CacheSetter::kCrafting;
+			}
+			if (std::strcmp(a_setterPath, "_global.MagicIconSetter") == 0) {
+				return CacheSetter::kMagic;
+			}
+			return CacheSetter::kInventory;
+		}
+
+		/**
 		 * Records last always; worst only from real cached-path runs, so a raw-I4
 		 * bypass sample never masquerades as the cached worst case in status.
 		 */
@@ -114,7 +133,7 @@ namespace InventoryInjectorImproved::I4Hook
 		constexpr std::uint32_t kConfigReadChunkBytes = 64U * 1024U;
 
 		// Bump when the serialized format or the delta-capture logic changes.
-		constexpr std::uint32_t kSchemaVersion = 3;
+		constexpr std::uint32_t kSchemaVersion = 4;
 
 		/**
 		 * v1 does not read I4's DLL version at runtime; the config-bytes hash plus
@@ -416,8 +435,8 @@ namespace InventoryInjectorImproved::I4Hook
 		class ProcessListCache : public RE::GFxFunctionHandler
 		{
 		public:
-			explicit ProcessListCache(RE::GFxValue a_original) :
-				_original(std::move(a_original))
+			explicit ProcessListCache(RE::GFxValue a_original, CacheSetter a_setter) :
+				_original(std::move(a_original)), _setter(a_setter)
 			{}
 
 			void Call(Params& a_params) override
@@ -445,7 +464,7 @@ namespace InventoryInjectorImproved::I4Hook
 					return;
 				}
 
-				const ClassifyResult cr = ClassifyEntries(a_params, entryList, count, wantLog);
+				const ClassifyResult cr = ClassifyEntries(a_params, entryList, count, wantLog, _setter);
 
 				const std::int64_t i4_us = ProcessMisses(a_params, args, cr.misses);
 
@@ -485,7 +504,7 @@ namespace InventoryInjectorImproved::I4Hook
 			 * code that could re-enter here); ProcessMisses re-locks to write deltas back.
 			 */
 			static ClassifyResult ClassifyEntries(Params& a_params, RE::GFxValue& a_entryList,
-				std::uint32_t a_count, bool a_wantLog)
+				std::uint32_t a_count, bool a_wantLog, CacheSetter a_setter)
 			{
 				ClassifyResult res;
 				res.misses.reserve(a_count);
@@ -501,7 +520,7 @@ namespace InventoryInjectorImproved::I4Hook
 					if (!a_entryList.GetElement(i, &entry) || !entry.IsObject()) {
 						continue;
 					}
-					ClassifyOne(hs, a_params.movie, entry, c0, a_wantLog, res);
+					ClassifyOne(hs, a_params.movie, entry, c0, a_wantLog, res, a_setter);
 				}
 
 				return res;
@@ -512,7 +531,8 @@ namespace InventoryInjectorImproved::I4Hook
 			 * a miss for I4. Caller holds cacheMutex and has confirmed entry is an object.
 			 */
 			static void ClassifyOne(HookState& a_hs, RE::GFxMovie* a_movie, RE::GFxValue& a_entry,
-				std::chrono::high_resolution_clock::time_point a_c0, bool a_wantLog, ClassifyResult& a_res)
+				std::chrono::high_resolution_clock::time_point a_c0, bool a_wantLog, ClassifyResult& a_res,
+				CacheSetter a_setter)
 			{
 				const auto addClassify = [&] {
 					if (a_wantLog) {
@@ -534,11 +554,11 @@ namespace InventoryInjectorImproved::I4Hook
 				std::uint64_t key = 0;
 				std::uint64_t token = 0;
 				if (dynamic) {
-					key = *formID;  // session-stable form identity; no content hash
+					key = MakeCacheKey(*formID, false, 0, a_setter);  // session-stable form identity; no content hash
 					token = DynamicToken(a_entry);
 				} else {
 					const bool soulGem = IsSoulGem(a_entry);
-					key = MakeCacheKey(*formID, soulGem, soulGem ? GetStatus(a_entry) : 0);
+					key = MakeCacheKey(*formID, soulGem, soulGem ? GetStatus(a_entry) : 0, a_setter);
 				}
 
 				const Delta* delta = LookupDelta(a_hs, dynamic, key, token);
@@ -721,6 +741,7 @@ namespace InventoryInjectorImproved::I4Hook
 			}
 
 			RE::GFxValue _original;
+			CacheSetter  _setter;
 		};
 	}
 
@@ -753,7 +774,8 @@ namespace InventoryInjectorImproved::I4Hook
 			return;
 		}
 
-		auto         handler = RE::make_gptr<ProcessListCache>(std::move(original));
+		const auto   setter = SetterFromPath(a_setterPath);
+		auto         handler = RE::make_gptr<ProcessListCache>(std::move(original), setter);
 		RE::GFxValue hook;
 		a_view->CreateFunction(&hook, handler.get());
 		if (!proto.SetMember("processList", hook)) {
@@ -813,7 +835,7 @@ namespace InventoryInjectorImproved::I4Hook
 			entries.reserve(hs.cache.size());
 			for (const auto& [key, delta] : hs.cache) {
 				const auto d = DecodeCacheKey(key);
-				entries.push_back({ .formID = d.formID, .soulGem = d.soulGem, .status = d.status, .delta = delta });
+				entries.push_back({ .formID = d.formID, .soulGem = d.soulGem, .status = d.status, .setter = d.setter, .delta = delta });
 			}
 		}
 
@@ -910,7 +932,7 @@ namespace InventoryInjectorImproved::I4Hook
 		hs.cache.clear();
 		hs.dynamicCache.clear();
 		for (const auto& e : *decoded) {
-			hs.cache[MakeCacheKey(e.formID, e.soulGem, e.soulGem ? e.status : 0)] = e.delta;
+			hs.cache[MakeCacheKey(e.formID, e.soulGem, e.soulGem ? e.status : 0, e.setter)] = e.delta;
 		}
 		hs.restoredThisSession = decoded->size();
 		logger::info("I4Hook: restored {} cache entries", decoded->size());
