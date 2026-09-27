@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# update.sh — update the CommonLibSSE-NG submodule to the latest commit on the ng branch.
+# update.sh: pin the CommonLibSSE-NG submodule to a release tag.
 #
-# Usage: ./scripts/update.sh
+# Usage: ./scripts/update.sh [tag]    (default: the latest v* release tag)
 
 set -euo pipefail
 
@@ -10,10 +10,33 @@ if [[ ! -f "CMakeLists.txt" ]]; then
 	exit 1
 fi
 
-echo "Updating CommonLibSSE-NG submodule..."
-git submodule update --remote lib/commonlibsse-ng
+submodule="lib/commonlibsse-ng"
+
+if [[ ! -e "${submodule}/.git" ]]; then
+	echo "Error: ${submodule} is not initialised (run: git submodule update --init)"
+	exit 1
+fi
+
+echo "Fetching CommonLibSSE-NG tags..."
+git -C "${submodule}" fetch --tags origin ng
+
+tag="${1:-$(git -C "${submodule}" for-each-ref --count=1 --sort=-v:refname --merged origin/ng --format='%(refname:short)' 'refs/tags/v[0-9]*')}"
+if [[ -z "${tag}" ]]; then
+	echo "Error: no release tag found on origin/ng in ${submodule}"
+	exit 1
+fi
+if ! git -C "${submodule}" rev-parse --verify --quiet "refs/tags/${tag}" >/dev/null; then
+	echo "Error: tag '${tag}' not found in ${submodule}"
+	exit 1
+fi
+
+echo "Checking out CommonLibSSE-NG ${tag}..."
+git -C "${submodule}" checkout --quiet "refs/tags/${tag}"
+git -C "${submodule}" submodule update --init
+
+# CMake configure runs `git submodule update`, which resets an unstaged pin.
+git add "${submodule}"
 
 echo ""
-echo "Submodule updated. Next steps:"
-echo "  git add lib/commonlibsse-ng"
-echo "  git commit -m 'chore: update CommonLibSSE-NG submodule'"
+echo "Submodule pinned to ${tag} and staged. Next step:"
+echo "  git commit -m 'chore(deps): update CommonLibSSE-NG to ${tag}'"

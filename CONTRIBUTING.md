@@ -134,11 +134,15 @@ with `clangd`, and [clangd_extensions.nvim](https://github.com/p00f/clangd_exten
 
 ## Updating CommonLibSSE-NG
 
+The submodule is pinned to a release tag. `update.sh` checks out the latest `v*` tag, or the tag you pass, and stages the new pin:
+
 ```bash
-git submodule update --remote lib/commonlibsse-ng
-git add lib/commonlibsse-ng
-git commit -m "chore(deps): update CommonLibSSE-NG submodule"
+./scripts/update.sh            # latest release
+./scripts/update.sh v9.1.0     # a specific release
+git commit -m "chore(deps): update CommonLibSSE-NG to v9.1.0"
 ```
+
+If you cloned before the submodule moved to `alandtse/CommonLibSSE-NG`, run `git submodule sync` once to update its remote URL.
 
 ## Diagnostic console commands
 

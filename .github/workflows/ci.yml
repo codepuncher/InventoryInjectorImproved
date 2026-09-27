@@ -24,6 +24,7 @@ jobs:
       format: ${{ steps.filter.outputs.format }}
       tidy:   ${{ steps.filter.outputs.tidy }}
       cmake:  ${{ steps.filter.outputs.cmake }}
+      commonlib: ${{ steps.filter.outputs.commonlib }}
       ci:     ${{ steps.filter.outputs.ci }}
 
     steps:
@@ -45,6 +46,10 @@ jobs:
               - 'CMakePresets.json'
               - 'cmake/**'
               - 'vcpkg.json'
+              - '.gitmodules'
+              - 'lib/vcpkg'
+            commonlib:
+              - 'lib/commonlibsse-ng'
             ci:
               - '.github/workflows/ci.yml'
 
@@ -139,6 +144,7 @@ jobs:
         github.event_name == 'workflow_dispatch' ||
         needs.changes.outputs.src == 'true' ||
         needs.changes.outputs.cmake == 'true' ||
+        needs.changes.outputs.commonlib == 'true' ||
         needs.changes.outputs.ci == 'true'
       )
 
@@ -200,6 +206,7 @@ jobs:
         needs.changes.outputs.src == 'true' ||
         needs.changes.outputs.tidy == 'true' ||
         needs.changes.outputs.cmake == 'true' ||
+        needs.changes.outputs.commonlib == 'true' ||
         needs.changes.outputs.ci == 'true'
       )
 

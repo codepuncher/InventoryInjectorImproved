@@ -126,7 +126,13 @@ namespace InventoryInjectorImproved::ConsoleHook
 
 		const REL::Relocation<std::uintptr_t> hookPoint{ REL::RelocationID(52065, 52952),
 			REL::VariantOffset(0xE2, 0x52, 0xE2) };
-		OriginalCompileAndRun() = SKSE::GetTrampoline().write_call<5>(hookPoint.address(), CompileAndRun);
+		const auto                            address = hookPoint.address();
+		// NOLINTNEXTLINE(performance-no-int-to-ptr): read the code byte at a runtime-resolved address to validate the site
+		if (*reinterpret_cast<const std::uint8_t*>(address) != 0xE8) {
+			logger::warn("ConsoleHook: patch site is not a call on this runtime, i5 console commands unavailable");
+			return;
+		}
+		OriginalCompileAndRun() = SKSE::GetTrampoline().write_call<5>(address, CompileAndRun);
 		logger::info("ConsoleHook: installed i5 console commands");
 	}
 }

@@ -109,6 +109,6 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/12604]SkyUI[/url] by the SkyUI Team and [url=https://github.com/doodlum/SkyUI-Community]community contributors[/url]
 [*][url=https://skse.silverlock.org/]SKSE[/url] by the SKSE Team
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url] by [url=https://www.nexusmods.com/profile/meh321]meh321[/url]
-[*][url=https://github.com/alandtse/CommonLibVR/tree/ng]CommonLibSSE-NG[/url] by [url=https://github.com/alandtse]alandtse[/url] and contributors
+[*][url=https://github.com/alandtse/CommonLibSSE-NG/tree/ng]CommonLibSSE-NG[/url] by [url=https://github.com/alandtse]alandtse[/url] and contributors
 [/list]
 ```

@@ -202,6 +202,11 @@ namespace InventoryInjectorImproved::FavoritesCrashFix
 		}
 		installed = true;
 
+		if (REL::Module::IsAtLeast(SKSE::RUNTIME_SSE_1_7_99)) {
+			logger::info("FavoritesCrashFix: not needed on this runtime");
+			return;
+		}
+
 		REL::Relocation<std::uintptr_t> vtbl{ RE::VTABLE_FavoritesMenu[0] };
 		if (!vtbl.address()) {  // unreachable at runtime; without it clang-analyzer models address() as 0 inside write_vfunc
 			return;
