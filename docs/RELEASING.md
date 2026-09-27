@@ -50,7 +50,7 @@ python3 scripts/generate-nexus-page.py --copy
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `ci.yml` | PRs to `main` touching `src/`, `test/`, `.clang-format`, `.clang-tidy`, `cmake/`, `vcpkg.json`, `CMakeLists.txt`, `CMakePresets.json`, or `ci.yml` itself; also manual `workflow_dispatch` | `clang-format` (ubuntu) → `test` + `build` (windows, parallel) → `clang-tidy` (windows) |
+| `ci.yml` | PRs to `main` touching `src/`, `test/`, `.clang-format`, `.clang-tidy`, `cmake/`, `vcpkg.json`, `.gitmodules`, the `lib/` submodule pins, `CMakeLists.txt`, `CMakePresets.json`, or `ci.yml` itself; also manual `workflow_dispatch` | `clang-format` (ubuntu) → `test` + `build` (windows, parallel) → `clang-tidy` (windows) |
 | `release.yml` | Push of a `v*` tag | Builds, packages via `scripts/package.sh`, publishes a GitHub Release with zip + PDB |
 | `nexus-upload.yml` | Manual `workflow_dispatch` (its `release: published` trigger doesn't fire, see [Nexus Mods upload](#nexus-mods-upload)) | Downloads release zip, generates cliff release notes, uploads to Nexus Mods |
 | `lint.yml` | PRs touching `scripts/` | Runs shellcheck on shell scripts |
