@@ -103,6 +103,16 @@ jobs:
             exit 1
           fi
 
+      - name: Check mod id
+        shell: bash
+        env:
+          MOD_ID: ${{ secrets.NEXUSMODS_MOD_ID }}
+        run: |
+          if [[ -z "$MOD_ID" ]]; then
+            echo "Error: repository secret NEXUSMODS_MOD_ID is not set" >&2
+            exit 1
+          fi
+
       - name: Strip release notes to plain text
         id: notes
         shell: bash
@@ -125,3 +135,6 @@ jobs:
           version: ${{ steps.version.outputs.value }}
           archive_existing_version: true
           update_mod_version: true
+          primary_mod_manager_download: true
+          mod_id: ${{ secrets.NEXUSMODS_MOD_ID }}
+          changelog: ${{ steps.notes.outputs.notes }}
