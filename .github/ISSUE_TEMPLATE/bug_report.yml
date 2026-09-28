@@ -39,6 +39,17 @@ body:
       required: true
 
   - type: textarea
+    id: crash_log
+    attributes:
+      label: Crash Log
+      description: |
+        If Skyrim crashed to desktop, install [Crash Logger SSE](https://www.nexusmods.com/skyrimspecialedition/mods/59596),
+        reproduce the crash, then paste or attach the newest `crash-*.log` from
+        `Documents/My Games/Skyrim Special Edition/SKSE` (`Skyrim Special Edition GOG` on GOG).
+    validations:
+      required: false
+
+  - type: textarea
     id: environment
     attributes:
       label: Environment
