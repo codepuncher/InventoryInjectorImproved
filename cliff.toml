@@ -14,7 +14,7 @@ trim = true
 conventional_commits = true
 filter_unconventional = true
 commit_preprocessors = [
-    { pattern = ' \(#\d+\)$', replace = "" },
+    { pattern = '(?m) \(#\d+\)$', replace = "" },
 ]
 commit_parsers = [
     { message = "^[a-z]+(\\([^)]+\\))?!:", group = "Breaking Changes" },

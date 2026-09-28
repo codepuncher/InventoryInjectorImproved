@@ -43,6 +43,7 @@ python3 scripts/generate-nexus-page.py --copy
 3. Add to your repository as secrets (Settings → Secrets → Actions):
    - `NEXUSMODS_API_KEY`: your Nexus Mods API key
    - `NEXUSMODS_FILE_ID`: the file ID
+   - `NEXUSMODS_MOD_ID`: the mod's internal ID, used to post each release's notes to the mod's Changelog tab. **Not** the number in the mod page URL. Look that URL number up via `https://api.nexusmods.com/v3/games/skyrimspecialedition/mods/<url-id>` (needs an `apikey` header) and use the `id` field from the response.
 4. Add a repository variable (Settings → Variables → Actions):
    - `NEXUSMODS_DISPLAY_NAME`: the file name shown on Nexus
 
