@@ -731,6 +731,10 @@ namespace InventoryInjectorImproved::I4Hook
 						continue;  // no-id miss: not cacheable
 					}
 					auto delta = BuildDelta(m.before, Snapshot(m.entry));
+					if (!DeltaSetsIconLabel(delta)) {
+						logger::debug("I4Hook: miss for key=0x{:x} produced no iconLabel; not caching this refresh", m.key);
+						continue;
+					}
 					if (m.target == CacheTarget::kDynamic) {
 						hs.dynamicCache[m.key] = { .delta = std::move(delta), .token = m.token };
 					} else {
