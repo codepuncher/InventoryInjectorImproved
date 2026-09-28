@@ -2,7 +2,7 @@
 
 ## Short Description
 
-Improves I4's inventory interface interactivity: I5 indexes item icons initially, ignoring identical items in iterations, including in item-heavy inventories. Importantly, it's installed independently, invisibly integrating into I4's implementation.
+Fixes performance issues with all item menus (inventories, containers, barter, crafting, smithing, magic, enchanting) as well as other I4 bugs.
 
 ---
 
