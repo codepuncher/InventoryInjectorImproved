@@ -39,6 +39,26 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 - No ESP/ESL; no game records changed.
 - **No SkyUI file conflicts**: it does not replace any SWF and works with SkyUI's stock UI.
 - Wraps I4's Scaleform hooks at runtime; compatible with I4 icon add-ons.
+
+**Known compatible mods:**
+
+- [Aura's Inventory Tweaks](https://www.nexusmods.com/skyrimspecialedition/mods/68557)
+- [B.O.O.B.I.E.S (Immersive Icons)](https://www.nexusmods.com/skyrimspecialedition/mods/89241)
+- [Compare Equipment NG](https://www.nexusmods.com/skyrimspecialedition/mods/158874)
+- [Constructible Object Custom Keyword System (Crafting Categories for SkyUI)](https://www.nexusmods.com/skyrimspecialedition/mods/81409)
+- [Container Distribution Framework](https://www.nexusmods.com/skyrimspecialedition/mods/120152)
+- [DynamicInventoryIconInjector](https://www.nexusmods.com/skyrimspecialedition/mods/174136)
+- [I4 Weapon Icons Overhaul](https://www.nexusmods.com/skyrimspecialedition/mods/106432)
+- [Infinity UI](https://www.nexusmods.com/skyrimspecialedition/mods/74483)
+- [NORDIC UI](https://www.nexusmods.com/skyrimspecialedition/mods/49881)
+- [QuickLoot IE](https://www.nexusmods.com/skyrimspecialedition/mods/120075)
+- [The Handy Icon Collection Collective](https://www.nexusmods.com/skyrimspecialedition/mods/90508)
+- [TrueHUD - Inventory Injector Patch](https://www.nexusmods.com/skyrimspecialedition/mods/157139)
+
+**Not compatible:**
+
+- [Inventory Refresh Fix](https://www.nexusmods.com/skyrimspecialedition/mods/192814): hooks the same `InventoryIconSetter.processList` function I5 does, and its list-invalidation caching does roughly the same job as I5's `InvalidateListFix`/`InvalidateMemo`. The difference is that its own docs say that cache doesn't persist, so it starts from scratch every session, while I5's is saved to the co-save. No reason to run both; they'd just fight over the same hook.
+- [SkyUI Inventory Optimizer](https://www.nexusmods.com/skyrimspecialedition/mods/192791): replaces SkyUI's `InventoryDataSetter.processEntry` (the AS2 item-card filler) with a native C++ version, but that's a different function than anything I5 touches. I5's `InvalidateMemo` skips reprocessing unchanged entries outright, so `processEntry` often never runs under I5, leaving little for SkyUI Inventory Optimizer's native version to speed up.
 <!-- nexus:end -->
 
 ---
