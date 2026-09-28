@@ -98,6 +98,12 @@ I5 doesn't cache Favorites because it's a small list that's rarely heavy, so cac
 
 `i5 bypass`, `i5 verify` and `i5 memo` are developer diagnostics: see [CONTRIBUTING.md](CONTRIBUTING.md#diagnostic-console-commands).
 
+## Reporting bugs
+
+Open a [GitHub issue](https://github.com/codepuncher/InventoryInjectorImproved/issues). If Skyrim crashed to
+desktop, install [Crash Logger SSE](https://www.nexusmods.com/skyrimspecialedition/mods/59596), reproduce the
+crash, and attach the `crash-*.log` it writes to the same SKSE log folder as I5's own log above.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for building, testing and code style, and

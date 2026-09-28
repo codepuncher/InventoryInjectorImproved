@@ -93,6 +93,9 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 [b]Icons look wrong after I updated I4. What do I do?[/b]
 [spoiler]Run [font=Courier New]i5 purge[/font], then save. The cache resets itself on load when your plugins or I4 configs change, but it can't tell when I4 itself is updated. Saves made before the update keep their old cache until you purge and save over them.[/spoiler]
 
+[b]My game crashed. What do I attach to a bug report?[/b]
+[spoiler]Install [url=https://www.nexusmods.com/skyrimspecialedition/mods/59596]Crash Logger SSE[/url], reproduce the crash, then open a [url=https://github.com/codepuncher/InventoryInjectorImproved/issues]GitHub issue[/url] with the newest crash-*.log from your SKSE log folder attached.[/spoiler]
+
 [b]How do I know it's working?[/b]
 [spoiler]Run [font=Courier New]i5 status[/font]. It shows the cache size, how many entries came from the co-save, and the last and worst refresh times.[/spoiler]
 
