@@ -22,6 +22,8 @@ Fixes performance issues with all item menus (inventories, containers, barter, c
 
 ```bbcode
 [font=Times New Roman][size=5]OVERVIEW[/size][/font]
+[quote]Improves I4's inventory interface interactivity: I5 indexes item icons initially, ignoring identical items in iterations, including in item-heavy inventories. Importantly, it's installed independently, invisibly integrating into I4's implementation.[/quote]
+
 I5 aims to fix and improve I4, starting with its performance issues, such as the lag when switching inventory tabs, navigating crafting menu categories, using or dropping items, or taking items from containers.
 
 I4 rebuilds every item's icon data each time a menu's item list refreshes, which takes about 90ms for about 200 items. I5 caches that work per item, so each refresh only processes new items. The cache is saved with your game, so the first menu open after loading a save is fast too.
