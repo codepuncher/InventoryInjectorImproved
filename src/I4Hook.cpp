@@ -405,6 +405,17 @@ namespace InventoryInjectorImproved::I4Hook
 			kDynamic
 		};
 
+		/**
+		 * True when a_list has a raw, settable _entryList array field: the shape
+		 * ProcessMisses needs to swap in a miss-only array. Checked both before
+		 * classifying (Call) and before swapping (ProcessMisses), so the two stay in
+		 * lockstep.
+		 */
+		bool HasRawEntryList(const RE::GFxValue& a_list, RE::GFxValue& a_out)
+		{
+			return a_list.GetMember("_entryList", &a_out) && a_out.IsArray();
+		}
+
 		// NOLINTNEXTLINE(bugprone-exception-escape): move ctor may throw only via RE::GFxValue; fine for this transient carrier
 		struct Miss
 		{
@@ -449,7 +460,8 @@ namespace InventoryInjectorImproved::I4Hook
 
 				const RE::GFxValue& list = args.front();
 				RE::GFxValue        entryList;
-				if ((!list.GetMember("_entryList", &entryList) || !entryList.IsArray()) &&
+				const bool          hasRawEntryList = HasRawEntryList(list, entryList);
+				if (!hasRawEntryList &&
 					(!list.GetMember("entryList", &entryList) || !entryList.IsArray())) {
 					CallOriginal(a_params, args);
 					return;
@@ -459,8 +471,17 @@ namespace InventoryInjectorImproved::I4Hook
 				const bool          wantLog = spdlog::should_log(spdlog::level::debug);
 				const std::uint32_t count = entryList.GetArraySize();
 
+				/**
+				 * No _entryList field to swap misses into later, so classifying now would
+				 * only add cost ProcessMisses could never recoup; skip straight to I4.
+				 */
+				if (!hasRawEntryList) {
+					RunPassthrough(a_params, args, menu, count, wantLog, "entryList not swappable (raw I4)");
+					return;
+				}
+
 				if (State().bypass.load(std::memory_order_relaxed)) {
-					RunBypass(a_params, args, menu, count, wantLog);
+					RunPassthrough(a_params, args, menu, count, wantLog, "bypass on (raw I4)");
 					return;
 				}
 
@@ -481,8 +502,13 @@ namespace InventoryInjectorImproved::I4Hook
 			}
 
 		private:
-			void RunBypass(Params& a_params, std::span<RE::GFxValue> a_args, const char* a_menu,
-				std::uint32_t a_count, bool a_wantLog)
+			/**
+			 * A raw, uncached I4 call with no classify pass: used both for manual
+			 * `i5 bypass on` and for a list whose entries can't be swapped for misses.
+			 * Excluded from the cached-path worst-case stat (see RecordTiming).
+			 */
+			void RunPassthrough(Params& a_params, std::span<RE::GFxValue> a_args, const char* a_menu,
+				std::uint32_t a_count, bool a_wantLog, const char* a_reason)
 			{
 				const auto b0 = std::chrono::high_resolution_clock::now();
 				CallOriginal(a_params, a_args);
@@ -492,8 +518,8 @@ namespace InventoryInjectorImproved::I4Hook
 				FrameProbe::NoteRefresh(a_menu, a_count);
 				if (a_wantLog) {
 					logger::debug(
-						"I4 processList [{}] {} entries | bypass on (raw I4) | total {} us",
-						a_menu, a_count, us);
+						"I4 processList [{}] {} entries | {} | total {} us",
+						a_menu, a_count, a_reason, us);
 				}
 			}
 
@@ -676,8 +702,9 @@ namespace InventoryInjectorImproved::I4Hook
 			 * I4 must see the real list object: icon setters compiled with getter calls
 			 * (Crafting Categories for SkyUI, NORDIC UI) read it via
 			 * a_list.__get__entryList(), a list-class method a plain stand-in object
-			 * lacks. A list whose entries cannot be swapped runs I4 over every entry,
-			 * uncached.
+			 * lacks. Call() already filters out lists with no raw _entryList field before
+			 * classifying, so this check only catches the shape changing between Call()
+			 * and here; if it fails, I4 runs over every entry, uncached.
 			 */
 			std::int64_t ProcessMisses(Params& a_params, std::span<RE::GFxValue> a_args, const std::vector<Miss>& a_misses)
 			{
@@ -687,7 +714,7 @@ namespace InventoryInjectorImproved::I4Hook
 
 				RE::GFxValue& list = a_args.front();
 				RE::GFxValue  entries;
-				if (!list.GetMember("_entryList", &entries) || !entries.IsArray()) {
+				if (!HasRawEntryList(list, entries)) {
 					return RunUncached(a_params, a_args);
 				}
 
