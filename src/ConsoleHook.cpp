@@ -7,7 +7,8 @@
 #include "InvalidateListFix.h"
 #include "InvalidateMemo.h"
 
-#include <string>
+#include <cstdint>
+#include <format>
 
 namespace InventoryInjectorImproved::ConsoleHook
 {
@@ -31,6 +32,11 @@ namespace InventoryInjectorImproved::ConsoleHook
 				return;
 			}
 			console->Print("%s", a_msg.c_str());
+		}
+
+		std::string FormatHex(std::uint32_t a_formID)
+		{
+			return std::format("{:08X}", a_formID);
 		}
 
 		std::string FormatSample(const char* a_label, const I4Hook::TimingSample& a_s)
@@ -66,8 +72,8 @@ namespace InventoryInjectorImproved::ConsoleHook
 		void CompileAndRun(RE::Script* a_script, RE::ScriptCompiler* a_compiler,
 			RE::COMPILER_NAME a_name, RE::TESObjectREFR* a_targetRef)
 		{
-			const auto action = a_script ? Console::ParseCommand(a_script->GetCommand()) : Console::Action::kNone;
-			switch (action) {
+			const auto parsed = a_script ? Console::Classify(a_script->GetCommand()) : Console::ParsedCommand{};
+			switch (parsed.action) {
 			case Console::Action::kPurge:
 				Print("I5: icon cache purged (" + std::to_string(I4Hook::ClearCache()) + " entries cleared)");
 				return;
@@ -106,8 +112,12 @@ namespace InventoryInjectorImproved::ConsoleHook
 				InvalidateMemo::SetEnabled(false);
 				Print("I5: invalidate memo OFF (every InvalidateData runs)");
 				return;
+			case Console::Action::kInvalidate:
+				Print("I5: invalidated formID " + FormatHex(parsed.formID) + " (" +
+					  std::to_string(I4Hook::InvalidateFormID(parsed.formID)) + " entries cleared)");
+				return;
 			case Console::Action::kUsage:
-				Print("I5: usage - i5 purge | status | debug on|off | bypass on|off | verify on|off | memo on|off");
+				Print("I5: usage - i5 purge | status | debug on|off | bypass on|off | verify on|off | memo on|off | invalidate <formid>");
 				return;
 			case Console::Action::kNone:
 				break;

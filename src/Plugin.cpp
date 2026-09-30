@@ -6,6 +6,7 @@
 #include "I4Hook.h"
 #include "InvalidateListFix.h"
 #include "InvalidateMemo.h"
+#include "PluginAPI.h"
 #include "TrampolineBudget.h"
 
 void SetupLog()
@@ -121,6 +122,9 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 
 	if (!messaging->RegisterListener([](SKSE::MessagingInterface::Message* a_msg) {
 			switch (a_msg->type) {
+			case SKSE::MessagingInterface::kPostLoad:
+				InventoryInjectorImproved::PluginAPI::BroadcastAPI(SKSE::GetMessagingInterface());
+				break;
 			case SKSE::MessagingInterface::kDataLoaded:
 				OnDataLoaded();
 				break;

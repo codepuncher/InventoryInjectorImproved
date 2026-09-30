@@ -101,6 +101,7 @@ else()
         src/FavoritesCrashFix.cpp
         src/InvalidateListFix.cpp
         src/InvalidateMemo.cpp
+        src/PluginAPI.cpp
         "${CMAKE_CURRENT_BINARY_DIR}/src/version.rc"
         USE_ADDRESS_LIBRARY)
 

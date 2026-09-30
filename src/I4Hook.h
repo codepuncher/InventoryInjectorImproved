@@ -41,6 +41,7 @@ namespace InventoryInjectorImproved::I4Hook
 
 	void        Inject(RE::GFxMovieView* a_view, const char* a_setterPath);
 	std::size_t ClearCache();
+	std::size_t InvalidateFormID(std::uint32_t a_formID);
 	CacheStats  GetCacheStats();
 	void        SetBypass(bool a_on);
 	void        SetDebugLogging(bool a_on);

@@ -108,6 +108,9 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 [b]Does it work on VR?[/b]
 [spoiler]No. I5 supports Skyrim SE and AE only. I don't own a VR headset, so I can't test or support a VR version. If you play in VR and want to help test, post in the comments and I can make a test build.[/spoiler]
 
+[font=Times New Roman][size=5]FOR MOD AUTHORS[/size][/font]
+If your mod changes an item's displayed icon or data at runtime, I5 exposes a small compatibility API to invalidate a single item's cached icon instead of the whole cache. See [url=https://github.com/codepuncher/InventoryInjectorImproved/blob/main/src/I5API.h]src/I5API.h[/url].
+
 [font=Times New Roman][size=5]CREDITS[/size][/font]
 [list]
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/85702]I4 - Inventory Interface Information Injector[/url] by [url=https://www.nexusmods.com/skyrimspecialedition/users/39501725]Parapets[/url] and [url=https://www.nexusmods.com/skyrimspecialedition/users/4569617]Jelidity[/url]

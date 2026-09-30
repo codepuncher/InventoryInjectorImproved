@@ -94,9 +94,20 @@ I5 doesn't cache Favorites because it's a small list that's rarely heavy, so cac
 |---|---|
 | `i5 status` | Prints cache size, how many entries were restored from the co-save this session, and the last and worst refresh timings. |
 | `i5 purge` | Clears the icon cache. Use it if icons look wrong after updating I4, then save. |
+| `i5 invalidate <formid>` | Clears the cached icon for one item (hex form ID, e.g. `i5 invalidate 14`), instead of the whole cache. |
 | `i5 debug on\|off` | Turns per-refresh timing logging to the log file on or off. |
 
 `i5 bypass`, `i5 verify` and `i5 memo` are developer diagnostics: see [CONTRIBUTING.md](CONTRIBUTING.md#diagnostic-console-commands).
+
+## Compatibility API for mod authors
+
+A mod that changes an item's displayed icon/data at runtime can end up serving I5's stale
+cached icon for that item, since I5 doesn't know the item changed. I5 broadcasts a small
+`API::IAPI` interface (`src/I5API.h`) over SKSE's `MessagingInterface` at `kPostLoad`, with
+an `InvalidateItem(formID)` call that clears every cached icon for that item so it's
+recomputed on the next menu refresh. Copy `src/I5API.h` into your own plugin and register
+a listener for I5's plugin-name channel (`"InventoryInjectorImproved"`) to receive it, the
+same way you'd consume any other SKSE plugin's API.
 
 ## Reporting bugs
 
