@@ -44,7 +44,7 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 [font=Times New Roman][size=5]REQUIREMENTS[/size][/font]
 [list]
 [*][url=https://skse.silverlock.org/]SKSE64[/url]
-[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url]
+[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url] (SE/AE) or [url=https://www.nexusmods.com/skyrimspecialedition/mods/58101]VR Address Library for SKSEVR[/url] (VR)
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/12604]SkyUI[/url]
 [*][b][url=https://www.nexusmods.com/skyrimspecialedition/mods/85702]I4 - Inventory Interface Information Injector[/url][/b]: this mod is a performance companion for I4; without I4 installed it does nothing.
 [/list]
@@ -66,7 +66,7 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 
 [font=Times New Roman][size=5]COMPATIBILITY[/size][/font]
 [list]
-[*]Skyrim SE 1.5.97 and AE 1.6.x, through Address Library. Tested on AE 1.6.1170.
+[*]Skyrim SE 1.5.97, AE 1.6.x, and VR, through Address Library. Tested on AE 1.6.1170; confirmed working on VR.
 [*]No ESP/ESL; no game records changed.
 [*][b]No SkyUI file conflicts[/b]: it does not replace any SWF and works with SkyUI's stock UI.
 [*]Wraps I4's Scaleform hooks at runtime; compatible with I4 icon add-ons.
@@ -106,7 +106,7 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 [spoiler]No. I5 reuses I4's own results, so the icons are the same.[/spoiler]
 
 [b]Does it work on VR?[/b]
-[spoiler]No. I5 supports Skyrim SE and AE only. I don't own a VR headset, so I can't test or support a VR version. If you play in VR and want to help test, post in the comments and I can make a test build.[/spoiler]
+[spoiler]Yes, confirmed working by VR testers (see Credits). You'll need the [url=https://www.nexusmods.com/skyrimspecialedition/mods/58101]VR Address Library for SKSEVR[/url] instead of the SE/AE one.[/spoiler]
 
 [font=Times New Roman][size=5]CREDITS[/size][/font]
 [list]
@@ -115,5 +115,6 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 [*][url=https://skse.silverlock.org/]SKSE[/url] by the SKSE Team
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url] by [url=https://www.nexusmods.com/profile/meh321]meh321[/url]
 [*][url=https://github.com/alandtse/CommonLibSSE-NG/tree/ng]CommonLibSSE-NG[/url] by [url=https://github.com/alandtse]alandtse[/url] and contributors
+[*]VR testing by [url=https://www.nexusmods.com/profile/Patka250]Patka250[/url] and [url=https://www.nexusmods.com/profile/ITSCOMING]ITSCOMING[/url]
 [/list]
 ```

@@ -17,7 +17,7 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 ## Requirements
 
 - [SKSE64](https://skse.silverlock.org/)
-- [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
+- [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444) (SE/AE) or [VR Address Library for SKSEVR](https://www.nexusmods.com/skyrimspecialedition/mods/58101) (VR)
 - [SkyUI](https://www.nexusmods.com/skyrimspecialedition/mods/12604)
 - **[I4 - Inventory Interface Information Injector](https://www.nexusmods.com/skyrimspecialedition/mods/85702)**: this mod is a performance companion for I4; without I4 installed it does nothing.
 
@@ -35,7 +35,7 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 
 ## Compatibility
 
-- Skyrim SE 1.5.97 and AE 1.6.x, through Address Library. Tested on AE 1.6.1170.
+- Skyrim SE 1.5.97, AE 1.6.x, and VR, through Address Library. Tested on AE 1.6.1170; confirmed working on VR.
 - No ESP/ESL; no game records changed.
 - **No SkyUI file conflicts**: it does not replace any SWF and works with SkyUI's stock UI.
 - Wraps I4's Scaleform hooks at runtime; compatible with I4 icon add-ons.
