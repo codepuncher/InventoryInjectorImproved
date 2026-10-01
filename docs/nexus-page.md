@@ -11,6 +11,8 @@ Fixes performance issues with all item menus (inventories, containers, barter, c
 - SKSE
 - User Interface
 - Bug Fixes
+- Performance Optimization
+- SkyUI
 
 ---
 
@@ -35,7 +37,6 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 [*]Player inventory
 [*]Containers, including follower inventories
 [*]Barter
-[*]Gifting
 [*]Crafting: smithing, smelting, tanning, cooking, alchemy and enchanting
 [*]Magic
 [/list]
@@ -66,9 +67,9 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 
 [font=Times New Roman][size=5]COMPATIBILITY[/size][/font]
 [list]
-[*]Skyrim SE 1.5.97, AE 1.6.x, and VR, through Address Library. Tested on AE 1.6.1170; confirmed working on VR.
+[*]Skyrim SE 1.5.97, AE 1.6.x, 1.7.x, and VR, through Address Library.
 [*]No ESP/ESL; no game records changed.
-[*][b]No SkyUI file conflicts[/b]: it does not replace any SWF and works with SkyUI's stock UI.
+[*][b]No SkyUI file conflicts[/b]: it does not replace any SWF and works with SkyUI's stock UI as well as UI patches and reskins.
 [*]Wraps I4's Scaleform hooks at runtime; compatible with I4 icon add-ons.
 [/list]
 <!-- generated:end -->
@@ -85,7 +86,8 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 [spoiler]Yes, a patch is included in I5 for this issue and will be removed once it's fixed upstream in I4.[/spoiler]
 
 [b]Why doesn't I5 speed up the Favorites menu?[/b]
-[spoiler]The Favorites menu is a small list that's rarely heavy, so caching it would save little.[/spoiler]
+[spoiler]The Favorites menu is a small list that's rarely heavy, so caching it would save little.
+If you need it then just ask and I'll add support.[/spoiler]
 
 [b]Is it safe to add or remove mid-playthrough?[/b]
 [spoiler]Yes. I5 has no ESP and changes no game records. Its co-save only holds the icon cache: on a save without one, the cache fills as you open menus, and if you remove I5, SKSE skips its co-save data.[/spoiler]

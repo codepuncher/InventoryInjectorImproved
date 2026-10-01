@@ -35,9 +35,9 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 
 ## Compatibility
 
-- Skyrim SE 1.5.97, AE 1.6.x, and VR, through Address Library. Tested on AE 1.6.1170; confirmed working on VR.
+- Skyrim SE 1.5.97, AE 1.6.x, 1.7.x, and VR, through Address Library.
 - No ESP/ESL; no game records changed.
-- **No SkyUI file conflicts**: it does not replace any SWF and works with SkyUI's stock UI.
+- **No SkyUI file conflicts**: it does not replace any SWF and works with SkyUI's stock UI as well as UI patches and reskins.
 - Wraps I4's Scaleform hooks at runtime; compatible with I4 icon add-ons.
 
 **Known compatible mods:**
