@@ -70,7 +70,7 @@ else()
         ON
         CACHE BOOL "" FORCE)
     set(ENABLE_SKYRIM_VR
-        OFF
+        ON
         CACHE BOOL "" FORCE)
     set(BUILD_TESTS
         OFF
@@ -79,8 +79,20 @@ else()
         OFF
         CACHE BOOL "" FORCE)
 
+    # With SE+AE+VR all enabled, lib/commonlibsse-ng/cmake/Prebuilt.cmake auto-fetches a prebuilt
+    # CommonLibSSE.lib on GITHUB_ACTIONS runners instead of building from source. Its published
+    # v9.1.0 bundle fails to link here (unresolved fmt::v12::detail::allocate against our
+    # vcpkg-built fmt, despite both resolving the same vcpkg port) and it's an MSVC-only artifact
+    # that can't link against our clang-cl cross-compile toolchain either way. The documented
+    # `-DCOMMONLIB_PREBUILT=OFF` opt-out is a no-op here: Prebuilt.cmake gates the fetch on
+    # `DEFINED ENV{GITHUB_ACTIONS} OR COMMONLIB_PREBUILT`, an OR that GITHUB_ACTIONS alone
+    # satisfies regardless of that variable. Unsetting the env var for this call is the only
+    # lever that actually forces a from-source build.
+    set(_i5_github_actions "$ENV{GITHUB_ACTIONS}")
+    unset(ENV{GITHUB_ACTIONS})
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/lib/commonlibsse-ng" "${CMAKE_CURRENT_BINARY_DIR}/commonlibsse-ng"
                      EXCLUDE_FROM_ALL)
+    set(ENV{GITHUB_ACTIONS} "${_i5_github_actions}")
 
     include("${CMAKE_CURRENT_SOURCE_DIR}/lib/commonlibsse-ng/cmake/CommonLibSSE.cmake")
 
