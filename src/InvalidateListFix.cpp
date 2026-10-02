@@ -4,6 +4,7 @@
 
 #include "CategoryFlags.h"
 #include "FrameProbe.h"
+#include "GFxArrayUtil.h"
 
 #include <cmath>
 #include <span>
@@ -45,7 +46,7 @@ namespace InventoryInjectorImproved::InvalidateListFix
 			const std::uint32_t n = a_entryList.GetArraySize();
 			for (std::uint32_t i = 0; i < n; ++i) {
 				RE::GFxValue entry;
-				if (!a_entryList.GetElement(i, &entry)) {
+				if (!TryGetObjectElement(a_entryList, i, entry)) {
 					continue;
 				}
 				RE::GFxValue ff;
@@ -219,7 +220,7 @@ namespace InventoryInjectorImproved::InvalidateListFix
 				std::uint32_t       writeFailures = 0;
 				for (std::uint32_t i = 0; i < c; ++i) {
 					RE::GFxValue entry;
-					if (!catEntryList.GetElement(i, &entry)) {
+					if (!TryGetObjectElement(catEntryList, i, entry)) {
 						continue;
 					}
 					RE::GFxValue value;
@@ -281,7 +282,7 @@ namespace InventoryInjectorImproved::InvalidateListFix
 				int                 mismatches = 0;
 				for (std::uint32_t i = 0; i < c; ++i) {
 					RE::GFxValue entry;
-					if (!catEntryList.GetElement(i, &entry)) {
+					if (!TryGetObjectElement(catEntryList, i, entry)) {
 						continue;
 					}
 					const CategoryInput ci = ReadCategory(entry);

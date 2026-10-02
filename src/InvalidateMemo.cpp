@@ -2,6 +2,7 @@
 
 #include "InvalidateMemo.h"
 
+#include "GFxArrayUtil.h"
 #include "InvalidateFingerprint.h"
 
 #include <cmath>
@@ -86,7 +87,7 @@ namespace InventoryInjectorImproved::InvalidateMemo
 			out.reserve(n);
 			for (std::uint32_t i = 0; i < n; ++i) {
 				RE::GFxValue entry;
-				if (!entryList.GetElement(i, &entry)) {
+				if (!TryGetObjectElement(entryList, i, entry)) {
 					continue;
 				}
 				out.push_back(ReadEntry(entry));
