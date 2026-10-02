@@ -19,4 +19,6 @@ namespace InventoryInjectorImproved::InvalidateMemo
 	 * When disabled the wrap always calls the original (vanilla behaviour).
 	 */
 	void SetEnabled(bool a_on);
+
+	void ForceReprocess();
 }

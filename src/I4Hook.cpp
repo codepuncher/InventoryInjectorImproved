@@ -7,6 +7,7 @@
 #include "CacheKey.h"
 #include "CacheSerialization.h"
 #include "FrameProbe.h"  // NOLINT(readability-duplicate-include): false positive, included once and required
+#include "InvalidateMemo.h"
 
 #include <algorithm>
 #include <array>
@@ -774,6 +775,21 @@ namespace InventoryInjectorImproved::I4Hook
 			RE::GFxValue _original;
 			CacheSetter  _setter;
 		};
+
+		template <typename Map>
+		std::size_t EraseByFormID(Map& a_map, std::uint32_t a_formID)
+		{
+			std::size_t cleared = 0;
+			for (auto it = a_map.begin(); it != a_map.end();) {
+				if (DecodeCacheKey(it->first).formID == a_formID) {
+					it = a_map.erase(it);
+					++cleared;
+				} else {
+					++it;
+				}
+			}
+			return cleared;
+		}
 	}
 
 	void Inject(RE::GFxMovieView* a_view, const char* a_setterPath)
@@ -827,6 +843,18 @@ namespace InventoryInjectorImproved::I4Hook
 		const auto       cleared = hs.cache.size() + hs.dynamicCache.size();
 		hs.cache.clear();
 		hs.dynamicCache.clear();
+		InvalidateMemo::ForceReprocess();
+		return cleared;
+	}
+
+	std::size_t InvalidateFormID(std::uint32_t a_formID)
+	{
+		auto&            hs = State();
+		std::scoped_lock lock(hs.cacheMutex);
+		const auto       cleared = EraseByFormID(hs.cache, a_formID) + EraseByFormID(hs.dynamicCache, a_formID);
+		if (cleared > 0) {
+			InvalidateMemo::ForceReprocess();
+		}
 		return cleared;
 	}
 

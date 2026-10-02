@@ -111,6 +111,9 @@ If you need it then just ask and I'll add support.[/spoiler]
 [b]Does it work on VR?[/b]
 [spoiler]Yes, confirmed working by VR testers (see Credits). You'll need the [url=https://www.nexusmods.com/skyrimspecialedition/mods/58101]VR Address Library for SKSEVR[/url] instead of the SE/AE one.[/spoiler]
 
+[font=Times New Roman][size=5]FOR MOD AUTHORS[/size][/font]
+If your mod changes an item's displayed icon or data at runtime, I5 exposes a small compatibility API to invalidate a single item's cached icon instead of the whole cache. See [url=https://github.com/codepuncher/InventoryInjectorImproved/blob/main/src/I5API.h]src/I5API.h[/url].
+
 [font=Times New Roman][size=5]CREDITS[/size][/font]
 [list]
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/85702]I4 - Inventory Interface Information Injector[/url] by [url=https://www.nexusmods.com/skyrimspecialedition/users/39501725]Parapets[/url] and [url=https://www.nexusmods.com/skyrimspecialedition/users/4569617]Jelidity[/url]
