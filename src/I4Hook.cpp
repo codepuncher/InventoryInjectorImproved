@@ -7,12 +7,13 @@
 #include "CacheKey.h"
 #include "CacheSerialization.h"
 #include "FrameProbe.h"  // NOLINT(readability-duplicate-include): false positive, included once and required
+#include "GFxArrayUtil.h"
 
 #include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstring>
-#include <filesystem>
+#include <filesystem>  // NOLINT(readability-duplicate-include): false positive, included once and required
 #include <optional>
 #include <span>
 #include <unordered_map>
@@ -543,7 +544,7 @@ namespace InventoryInjectorImproved::I4Hook
 					// c0 before GetElement so per-entry classify_us includes element-fetch cost.
 					const auto   c0 = a_wantLog ? std::chrono::high_resolution_clock::now() : std::chrono::high_resolution_clock::time_point{};
 					RE::GFxValue entry;
-					if (!a_entryList.GetElement(i, &entry) || !entry.IsObject()) {
+					if (!TryGetObjectElement(a_entryList, i, entry)) {
 						continue;
 					}
 					ClassifyOne(hs, a_params.movie, entry, c0, a_wantLog, res, a_setter);
