@@ -1,8 +1,9 @@
 name: Nexus Mods Upload
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       version:
@@ -15,31 +16,44 @@ permissions: {}
 jobs:
   upload:
     runs-on: ubuntu-latest
+    environment: nexus
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
 
     permissions:
       contents: read
 
     steps:
+      - name: Validate input version
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$ ]]; then
+            echo "Error: version must be in format X.Y.Z (optionally with prerelease/build metadata, e.g. 1.0.0-rc.1+build.1) without 'v' prefix" >&2
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha || format('v{0}', inputs.version) }}
+
       - name: Resolve version
         id: version
         shell: bash
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
           INPUT_VERSION: ${{ inputs.version }}
         run: |
-          VERSION="${RELEASE_TAG#v}"
+          TAG="$(git tag --points-at HEAD | grep -E '^v[0-9]+\.' | head -n1 || true)"
+          VERSION="${TAG#v}"
           VERSION="${VERSION:-$INPUT_VERSION}"
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$ ]]; then
             echo "Error: version must be in format X.Y.Z (optionally with prerelease/build metadata, e.g. 1.0.0-rc.1+build.1) without 'v' prefix" >&2
             exit 1
           fi
           echo "value=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          ref: v${{ steps.version.outputs.value }}
 
       - name: Compute cliff range
         id: range
@@ -99,7 +113,7 @@ jobs:
           DISPLAY_NAME: ${{ vars.NEXUSMODS_DISPLAY_NAME }}
         run: |
           if [[ -z "$DISPLAY_NAME" ]]; then
-            echo "Error: repository variable NEXUSMODS_DISPLAY_NAME is not set" >&2
+            echo "Error: environment variable NEXUSMODS_DISPLAY_NAME is not set in the nexus environment" >&2
             exit 1
           fi
 
@@ -109,7 +123,7 @@ jobs:
           MOD_ID: ${{ secrets.NEXUSMODS_MOD_ID }}
         run: |
           if [[ -z "$MOD_ID" ]]; then
-            echo "Error: repository secret NEXUSMODS_MOD_ID is not set" >&2
+            echo "Error: environment secret NEXUSMODS_MOD_ID is not set in the nexus environment" >&2
             exit 1
           fi
 
