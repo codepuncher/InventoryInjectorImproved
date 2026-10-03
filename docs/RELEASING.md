@@ -6,12 +6,18 @@ The version lives in two places: `CMakeLists.txt` (`project(... VERSION x.y.z)`)
 
 ## Cutting a release
 
-1. Bump the version in `CMakeLists.txt` and `vcpkg.json` on a branch. The `CMakeLists.txt` version is also embedded in the DLL and read by the co-save validity check, so a release without this bump lets old co-saves pass the check against a new build.
-2. Merge it to `main`.
-3. Tag `vX.Y.Z` on `main`, matching the bumped version exactly: `release.yml` names the zip after the tag, so a mismatch leaves the zip and Nexus file version disagreeing with the DLL's embedded version.
-4. Push the tag. `release.yml` builds the plugin, packages it via `scripts/package.sh`, and publishes a GitHub Release with the zip and PDB.
-5. Run `nexus-upload.yml` via workflow_dispatch, passing the version (no `v` prefix, per its input description). It must match the tag exactly: the workflow checks out and downloads `v<version>`, and fails outright if that tag doesn't exist. See [Nexus Mods upload](#nexus-mods-upload) for why this step is manual.
-6. If the Nexus page changed, regenerate it (see below) and paste it into the Nexus Mods page editor.
+1. Run `./scripts/release.sh <major|minor|patch|X.Y.Z>` on `main`. It bumps
+   `CMakeLists.txt` and `vcpkg.json` on a `chore/release-X.Y.Z` branch, opens
+   a PR (labeled `ignore-for-release`), waits for its checks, squash-merges
+   it, then tags and pushes `vX.Y.Z` — which triggers `release.yml` to build
+   the plugin, package it via `scripts/package.sh`, and publish a GitHub
+   Release with the zip and PDB. The `CMakeLists.txt` version is also
+   embedded in the DLL and read by the co-save validity check, and
+   `release.yml` names the zip after the tag, so keeping all three
+   (files, tag, DLL) in lockstep matters. Requires the GitHub CLI (`gh`),
+   authenticated with push/merge access.
+2. Run `nexus-upload.yml` via workflow_dispatch, passing the version (no `v` prefix, per its input description). It must match the tag exactly: the workflow checks out and downloads `v<version>`, and fails outright if that tag doesn't exist. See [Nexus Mods upload](#nexus-mods-upload) for why this step is manual.
+3. If the Nexus page changed, regenerate it (see below) and paste it into the Nexus Mods page editor.
 
 ## Nexus Mods page
 
