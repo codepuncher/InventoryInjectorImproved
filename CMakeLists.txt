@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(
     InventoryInjectorImproved
-    VERSION 0.2.2
+    VERSION 0.3.1
     DESCRIPTION "Fixes and improves I4 (Inventory Interface Information Injector)"
     LANGUAGES CXX)
 
