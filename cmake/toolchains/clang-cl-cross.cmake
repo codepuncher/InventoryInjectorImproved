@@ -10,21 +10,11 @@ set(XWIN_DIR
     CACHE PATH "xwin splat output directory")
 
 find_program(CMAKE_LINKER NAMES lld-link REQUIRED)
-set(CMAKE_C_COMPILER
-    /usr/bin/clang-cl
-    CACHE FILEPATH "")
-set(CMAKE_CXX_COMPILER
-    /usr/bin/clang-cl
-    CACHE FILEPATH "")
-set(CMAKE_AR
-    /usr/bin/llvm-lib
-    CACHE FILEPATH "")
-set(CMAKE_MT
-    /usr/bin/llvm-mt
-    CACHE FILEPATH "")
-set(CMAKE_RC_COMPILER
-    /usr/bin/llvm-rc
-    CACHE FILEPATH "")
+find_program(CMAKE_C_COMPILER NAMES clang-cl REQUIRED)
+find_program(CMAKE_CXX_COMPILER NAMES clang-cl REQUIRED)
+find_program(CMAKE_AR NAMES llvm-lib REQUIRED)
+find_program(CMAKE_MT NAMES llvm-mt REQUIRED)
+find_program(CMAKE_RC_COMPILER NAMES llvm-rc REQUIRED)
 
 set(CMAKE_C_COMPILER_TARGET x86_64-pc-windows-msvc)
 set(CMAKE_CXX_COMPILER_TARGET x86_64-pc-windows-msvc)
