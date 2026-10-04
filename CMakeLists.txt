@@ -111,7 +111,10 @@ else()
         src/I4Hook.cpp
         src/ConsoleHook.cpp
         src/FavoritesCrashFix.cpp
+        src/FavoritesHook.cpp
+        src/FavoritesKeywords.cpp
         src/GFxArrayUtil.cpp
+        src/KeywordFill.cpp
         src/InvalidateListFix.cpp
         src/InvalidateMemo.cpp
         "${CMAKE_CURRENT_BINARY_DIR}/src/version.rc"

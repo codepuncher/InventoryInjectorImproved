@@ -2,9 +2,10 @@
 
 #include "ConsoleHook.h"
 #include "FavoritesCrashFix.h"
+#include "FavoritesKeywords.h"
 #include "FrameProbe.h"
 #include "I4Hook.h"
-#include "InvalidateListFix.h"
+#include "InvalidateListFix.h"  // NOLINT(readability-duplicate-include): included once; no other header in this file includes it
 #include "InvalidateMemo.h"
 #include "TrampolineBudget.h"
 
@@ -120,12 +121,8 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 	}
 
 	if (!messaging->RegisterListener([](SKSE::MessagingInterface::Message* a_msg) {
-			switch (a_msg->type) {
-			case SKSE::MessagingInterface::kDataLoaded:
+			if (a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
 				OnDataLoaded();
-				break;
-			default:
-				break;
 			}
 		})) {
 		logger::error("Failed to register messaging listener");
@@ -156,6 +153,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 
 	InventoryInjectorImproved::ConsoleHook::Install();
 	InventoryInjectorImproved::FavoritesCrashFix::Install();
+	InventoryInjectorImproved::FavoritesKeywords::Install();
 	InventoryInjectorImproved::FrameProbe::Install();
 
 	const auto& trampoline = SKSE::GetTrampoline();

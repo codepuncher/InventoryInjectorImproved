@@ -8,6 +8,7 @@
 #include "CacheSerialization.h"
 #include "FrameProbe.h"  // NOLINT(readability-duplicate-include): false positive, included once and required
 #include "GFxArrayUtil.h"
+#include "KeywordFill.h"
 
 #include <algorithm>
 #include <array>
@@ -16,7 +17,7 @@
 #include <filesystem>  // NOLINT(readability-duplicate-include): false positive, included once and required
 #include <optional>
 #include <span>
-#include <unordered_map>
+#include <unordered_map>  // NOLINT(readability-duplicate-include): already included by PCH.h
 
 namespace InventoryInjectorImproved::I4Hook
 {
@@ -149,9 +150,9 @@ namespace InventoryInjectorImproved::I4Hook
 				return 0;
 			}
 			const auto v = decl->GetVersion();
-			return (static_cast<std::uint32_t>(v[0]) << 24) |
-			       (static_cast<std::uint32_t>(v[1]) << 16) |
-			       (static_cast<std::uint32_t>(v[2]) << 8) |
+			return (static_cast<std::uint32_t>(v[0]) << 24U) |
+			       (static_cast<std::uint32_t>(v[1]) << 16U) |
+			       (static_cast<std::uint32_t>(v[2]) << 8U) |
 			       static_cast<std::uint32_t>(v[3]);
 		}
 
@@ -403,7 +404,7 @@ namespace InventoryInjectorImproved::I4Hook
 		enum class CacheTarget : std::uint8_t
 		{
 			kStatic,
-			kDynamic
+			kDynamic,
 		};
 
 		/**
@@ -472,6 +473,11 @@ namespace InventoryInjectorImproved::I4Hook
 				const bool          wantLog = spdlog::should_log(spdlog::level::debug);
 				const std::uint32_t count = entryList.GetArraySize();
 
+				const bool bypass = State().bypass.load(std::memory_order_relaxed);
+				if (!bypass) {
+					FillMissingKeywords(a_params.movie, entryList);
+				}
+
 				/**
 				 * No _entryList field to swap misses into later, so classifying now would
 				 * only add cost ProcessMisses could never recoup; skip straight to I4.
@@ -481,7 +487,7 @@ namespace InventoryInjectorImproved::I4Hook
 					return;
 				}
 
-				if (State().bypass.load(std::memory_order_relaxed)) {
+				if (bypass) {
 					RunPassthrough(a_params, args, menu, count, wantLog, "bypass on (raw I4)");
 					return;
 				}

@@ -114,6 +114,7 @@ If you need it then just ask and I'll add support.[/spoiler]
 [font=Times New Roman][size=5]CREDITS[/size][/font]
 [list]
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/85702]I4 - Inventory Interface Information Injector[/url] by [url=https://www.nexusmods.com/skyrimspecialedition/users/39501725]Parapets[/url] and [url=https://www.nexusmods.com/skyrimspecialedition/users/4569617]Jelidity[/url]
+[*]Alchemy table keyword fix based on the [url=https://github.com/GroundAura/InventoryInjector/tree/alchemy-fix]I4 Alchemy Fix[/url] by [url=https://github.com/GroundAura]GroundAura[/url], used with permission
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/12604]SkyUI[/url] by the SkyUI Team and [url=https://github.com/doodlum/SkyUI-Community]community contributors[/url]
 [*][url=https://skse.silverlock.org/]SKSE[/url] by the SKSE Team
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url] by [url=https://www.nexusmods.com/profile/meh321]meh321[/url]
