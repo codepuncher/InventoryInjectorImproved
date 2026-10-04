@@ -2,6 +2,8 @@
 
 #include "FavoritesCrashFix.h"
 
+#include "FavoritesHook.h"
+
 #include "SkyUIConfig.h"
 
 #include <algorithm>
@@ -12,20 +14,7 @@ namespace InventoryInjectorImproved::FavoritesCrashFix
 {
 	namespace
 	{
-		using ProcessMessageFn = RE::UI_MESSAGE_RESULTS(RE::FavoritesMenu*, RE::UIMessage&);
-
-		constexpr auto kSetterPath = "_global.FavoritesIconSetter";
 		constexpr auto kNoIconColors = "_noIconColors";
-		constexpr auto kMarker = "_i5_favfix";
-
-		/**
-		 * The original FavoritesMenu::ProcessMessage, behind a getter to avoid a mutable global.
-		 */
-		REL::Relocation<ProcessMessageFn>& OriginalProcessMessage()
-		{
-			static REL::Relocation<ProcessMessageFn> original;
-			return original;
-		}
 
 		/**
 		 * The MCM override SKI_SettingsManager stores for noColor, if the player has set one.
@@ -120,77 +109,9 @@ namespace InventoryInjectorImproved::FavoritesCrashFix
 			}
 		}
 
-		class ProcessListShim : public RE::GFxFunctionHandler
+		void PresetStep(RE::GFxFunctionHandler::Params& a_params)
 		{
-		public:
-			explicit ProcessListShim(RE::GFxValue a_original) :
-				_original(std::move(a_original))
-			{}
-
-			void Call(Params& a_params) override
-			{
-				PresetNoIconColors(a_params.thisPtr);
-				if (!_original.Invoke("call", a_params.retVal, a_params.argsWithThisRef,
-						static_cast<std::size_t>(a_params.argCount) + 1)) {
-					logger::warn("FavoritesCrashFix: original processList invoke failed");
-				}
-			}
-
-		private:
-			RE::GFxValue _original;
-		};
-
-		void WrapProcessList(RE::GFxMovieView* a_view)
-		{
-			static const bool i4Loaded = static_cast<bool>(REX::W32::GetModuleHandleW(L"InventoryInjector.dll"));
-			if (!a_view || !i4Loaded) {
-				return;
-			}
-
-			RE::GFxValue setter;
-			if (!a_view->GetVariable(&setter, kSetterPath)) {
-				logger::debug("FavoritesCrashFix: {} not found", kSetterPath);
-				return;
-			}
-			RE::GFxValue proto;
-			if (!setter.GetMember("prototype", &proto) || !proto.IsObject()) {
-				logger::debug("FavoritesCrashFix: {}.prototype not found", kSetterPath);
-				return;
-			}
-
-			RE::GFxValue marker;
-			if (proto.GetMember(kMarker, &marker) && marker.IsBool() && marker.GetBool()) {
-				return;
-			}
-
-			RE::GFxValue original;
-			if (!proto.GetMember("processList", &original) || !original.IsObject()) {
-				logger::warn("FavoritesCrashFix: {}.prototype.processList not found", kSetterPath);
-				return;
-			}
-
-			auto         handler = RE::make_gptr<ProcessListShim>(std::move(original));
-			RE::GFxValue hook;
-			a_view->CreateFunction(&hook, handler.get());
-			if (!proto.SetMember("processList", hook)) {
-				logger::warn("FavoritesCrashFix: failed to replace {}.prototype.processList", kSetterPath);
-				return;
-			}
-
-			RE::GFxValue wrapped;
-			wrapped.SetBoolean(true);
-			if (!proto.SetMember(kMarker, wrapped)) {
-				logger::warn("FavoritesCrashFix: failed to set {} marker", kSetterPath);
-			}
-			logger::info("FavoritesCrashFix: wrapped {}.processList", kSetterPath);
-		}
-
-		RE::UI_MESSAGE_RESULTS ProcessMessage(RE::FavoritesMenu* a_menu, RE::UIMessage& a_message)
-		{
-			if (a_menu && a_message.type == RE::UI_MESSAGE_TYPE::kShow) {
-				WrapProcessList(a_menu->uiMovie.get());
-			}
-			return OriginalProcessMessage()(a_menu, a_message);
+			PresetNoIconColors(a_params.thisPtr);
 		}
 	}
 
@@ -207,11 +128,6 @@ namespace InventoryInjectorImproved::FavoritesCrashFix
 			return;
 		}
 
-		REL::Relocation<std::uintptr_t> vtbl{ RE::VTABLE_FavoritesMenu[0] };
-		if (!vtbl.address()) {  // unreachable at runtime; without it clang-analyzer models address() as 0 inside write_vfunc
-			return;
-		}
-		OriginalProcessMessage() = vtbl.write_vfunc(0x4, ProcessMessage);
-		logger::info("FavoritesCrashFix: hooked FavoritesMenu::ProcessMessage");
+		FavoritesHook::AddPreStep(PresetStep);
 	}
 }
