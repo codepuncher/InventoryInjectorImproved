@@ -1,15 +1,19 @@
 # Inventory Interface Information Injector Improved
 
-**Inventory Interface Information Injector Improved** (I5) fixes and improves
-**I4 (Inventory Interface Information Injector)**, starting with the menu lag it causes in SkyUI.
-
-I4 recomputes every item's icon data from scratch on *every* item-list refresh, so switching
-tabs or using/dropping an item lags, badly in large inventories (~90 ms per refresh for
-~200 items, and it scales up from there). I5 is an SKSE plugin that caches I4's
-per-item work keyed by form, cutting the per-refresh cost to a few milliseconds. It changes
+**Inventory Interface Information Injector Improved** (I5) is a general fix and performance
+addon for **I4 (Inventory Interface Information Injector)**. It is an SKSE plugin that changes
 no game data and ships no SWFs, so it has no file conflicts.
 
-I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1 on Skyrim versions before 1.7.
+## Features
+
+- **Faster item menus:** I4 recomputes every item's icon data from scratch on *every*
+  item-list refresh, so switching tabs, navigating items, or using/dropping an item can
+  drop the frame rate massively in large inventories. A refresh takes about 90 ms for
+  200 items, and the cost grows with item count. I5 caches that work per item, cutting the
+  per-refresh cost to a few milliseconds.
+- **Favorites crash fix:** fixes the crash to desktop when opening the Favorites menu with
+  I4 1.1.1 on Skyrim versions before 1.7.
+- **Alchemy keyword fix:** applies I4's keyword icon rules to alchemy table ingredients.
 
 ---
 
@@ -20,7 +24,7 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 - [SKSE64](https://skse.silverlock.org/)
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444) (SE/AE) or [VR Address Library for SKSEVR](https://www.nexusmods.com/skyrimspecialedition/mods/58101) (VR)
 - [SkyUI](https://www.nexusmods.com/skyrimspecialedition/mods/12604)
-- **[I4 - Inventory Interface Information Injector](https://www.nexusmods.com/skyrimspecialedition/mods/85702)**: this mod is a performance companion for I4; without I4 installed it does nothing.
+- **[I4 - Inventory Interface Information Injector](https://www.nexusmods.com/skyrimspecialedition/mods/85702)**
 
 ## Installation
 
@@ -107,4 +111,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for building, testing and code style, and
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+GPL-3.0-or-later, see [LICENSE](LICENSE). Required by CommonLibSSE-NG.

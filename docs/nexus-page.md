@@ -2,7 +2,7 @@
 
 ## Short Description
 
-Fixes performance issues with all item menus (inventories, containers, barter, crafting, smithing, magic, enchanting) as well as other I4 bugs.
+Fixes and improves I4: faster item menus (inventories, containers, barter, crafting, magic), a Favorites menu crash fix, and alchemy table keyword icons.
 
 ---
 
@@ -26,11 +26,14 @@ Fixes performance issues with all item menus (inventories, containers, barter, c
 [font=Times New Roman][size=5]OVERVIEW[/size][/font]
 [quote]Improves I4's inventory interface interactivity: I5 indexes item icons initially, ignoring identical items in iterations, including in item-heavy inventories. Importantly, it's installed independently, invisibly integrating into I4's implementation.[/quote]
 
-I5 aims to fix and improve I4, starting with its performance issues, such as the lag when switching inventory tabs, navigating crafting menu categories, using or dropping items, or taking items from containers.
+I5 is a general fix and performance addon for I4.
 
-I4 rebuilds every item's icon data each time a menu's item list refreshes, which takes about 90ms for about 200 items. I5 caches that work per item, so each refresh only processes new items. The cache is saved with your game, so the first menu open after loading a save is fast too.
-
-I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1 on Skyrim versions before 1.7.
+[font=Times New Roman][size=4]FEATURES[/size][/font]
+[list]
+[*][b]Faster item menus:[/b] the lag when switching tabs, navigating items, or using or dropping items can drop the frame rate massively in large inventories. I4 rebuilds every item's icon data each time a menu's item list refreshes, which takes about 90ms for 200 items and grows with item count. I5 caches that work per item, so each refresh only processes new items. The cache is saved with your game, so the first menu open after loading a save is fast too.
+[*][b]Favorites crash fix:[/b] fixes the crash to desktop when opening the Favorites menu with I4 1.1.1 on Skyrim versions before 1.7.
+[*][b]Alchemy keyword fix:[/b] applies I4's keyword icon rules to alchemy table ingredients.
+[/list]
 
 [font=Times New Roman][size=4]MENUS COVERED[/size][/font]
 [list]
@@ -48,7 +51,7 @@ I5 also fixes the crash to desktop when opening the Favorites menu with I4 1.1.1
 [*][url=https://skse.silverlock.org/]SKSE64[/url]
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url] (SE/AE) or [url=https://www.nexusmods.com/skyrimspecialedition/mods/58101]VR Address Library for SKSEVR[/url] (VR)
 [*][url=https://www.nexusmods.com/skyrimspecialedition/mods/12604]SkyUI[/url]
-[*][b][url=https://www.nexusmods.com/skyrimspecialedition/mods/85702]I4 - Inventory Interface Information Injector[/url][/b]: this mod is a performance companion for I4; without I4 installed it does nothing.
+[*][b][url=https://www.nexusmods.com/skyrimspecialedition/mods/85702]I4 - Inventory Interface Information Injector[/url][/b]
 [/list]
 
 [font=Times New Roman][size=5]INSTALLATION[/size][/font]
