@@ -53,6 +53,10 @@ else()
         endif()
     endif()
 
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lib/commonlibsse-ng/CMakeLists.txt")
+        message(FATAL_ERROR "lib/commonlibsse-ng is missing. Run: git submodule update --init --recursive")
+    endif()
+
     # Dependencies
 
     find_package(spdlog CONFIG REQUIRED)
