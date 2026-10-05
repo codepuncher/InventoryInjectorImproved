@@ -5,5 +5,7 @@ updates:
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "chore"
-      include: "scope"
+      prefix: "chore(deps)"
+    groups:
+      github-actions:
+        patterns: ["*"]
