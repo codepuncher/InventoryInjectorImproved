@@ -2,6 +2,7 @@
 
 #include "InvalidateMemo.h"
 
+#include "Features.h"
 #include "GFxArrayUtil.h"
 #include "InvalidateFingerprint.h"
 
@@ -215,7 +216,8 @@ namespace InventoryInjectorImproved::InvalidateMemo
 			{
 				RE::GFxValue& itemList = *a_params.thisPtr;
 
-				if (!EnabledFlag()) {
+				if (!Features::IsEnabled() || !EnabledFlag()) {
+					MemoState().lastProcessedFp.reset();
 					InvokeOriginal(a_params);
 					return;
 				}
@@ -337,5 +339,10 @@ namespace InventoryInjectorImproved::InvalidateMemo
 	void SetEnabled(bool a_on)
 	{
 		EnabledFlag() = a_on;
+	}
+
+	bool IsEnabled()
+	{
+		return EnabledFlag();
 	}
 }

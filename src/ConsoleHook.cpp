@@ -3,6 +3,7 @@
 #include "ConsoleHook.h"
 
 #include "ConsoleCommand.h"
+#include "Features.h"
 #include "I4Hook.h"
 #include "InvalidateListFix.h"
 #include "InvalidateMemo.h"
@@ -40,17 +41,27 @@ namespace InventoryInjectorImproved::ConsoleHook
 			                " hits, total " + std::to_string(a_s.total_us) + "us (i4 " +
 			                std::to_string(a_s.i4_us) + "us)";
 			if (a_s.bypass) {
-				s += " (raw I4 bypass)";
+				s += " (cache disabled)";
 			}
 			return s;
+		}
+
+		std::string FeatureState(const char* a_name, bool a_on)
+		{
+			return std::string(a_name) + (a_on ? " on" : " off");
 		}
 
 		std::string StatusLine(const I4Hook::CacheStats& a_stats)
 		{
 			std::string line = "I5 cache: " + std::to_string(a_stats.entries) + " entries (" +
 			                   (a_stats.entries > 0 ? "warm" : "cold") + "); restored " +
-			                   std::to_string(a_stats.restoredThisSession) + " from co-save this session";
-			line += "; " + std::to_string(a_stats.dynamicEntries) + " dynamic (in-session)";
+			                   std::to_string(a_stats.restoredThisSession) + " from SKSE co-save this session";
+			line += "; " + std::to_string(a_stats.dynamicEntries) + " session-only (not saved)";
+			const bool features = Features::IsEnabled();
+			line += "; features: " + FeatureState("icon cache", features && I4Hook::CacheEnabled()) +
+			        ", " + FeatureState("alchemy icon fix", features) +
+			        ", " + FeatureState("Faster SkyUI list refresh", features) +
+			        ", " + FeatureState("Skip redundant SkyUI refreshes", features && InvalidateMemo::IsEnabled());
 
 			const auto timing = I4Hook::GetTimingStats();
 			if (!timing.last.valid) {
@@ -68,8 +79,13 @@ namespace InventoryInjectorImproved::ConsoleHook
 		{
 			const auto action = a_script ? Console::ParseCommand(a_script->GetCommand()) : Console::Action::kNone;
 			switch (action) {
-			case Console::Action::kPurge:
-				Print("I5: icon cache purged (" + std::to_string(I4Hook::ClearCache()) + " entries cleared)");
+			case Console::Action::kDisableAll:
+				Features::SetEnabled(false);
+				Print("I5: all features disabled");
+				return;
+			case Console::Action::kEnableAll:
+				Features::SetEnabled(true);
+				Print("I5: all features enabled");
 				return;
 			case Console::Action::kStatus:
 				Print(StatusLine(I4Hook::GetCacheStats()));
@@ -82,14 +98,6 @@ namespace InventoryInjectorImproved::ConsoleHook
 				I4Hook::SetDebugLogging(false);
 				Print("I5: debug logging OFF");
 				return;
-			case Console::Action::kBypassOn:
-				I4Hook::SetBypass(true);
-				Print("I5: cache bypass ON (raw I4, not cached)");
-				return;
-			case Console::Action::kBypassOff:
-				I4Hook::SetBypass(false);
-				Print("I5: cache bypass OFF (cached)");
-				return;
 			case Console::Action::kVerifyOn:
 				InvalidateListFix::SetVerify(true);
 				Print("I5: InvalidateListData verify ON (asserting O(N+C) flags match vanilla -> InventoryInjectorImproved.log)");
@@ -98,16 +106,27 @@ namespace InventoryInjectorImproved::ConsoleHook
 				InvalidateListFix::SetVerify(false);
 				Print("I5: InvalidateListData verify OFF (fast path)");
 				return;
+			case Console::Action::kDisableCache:
+				I4Hook::SetBypass(true);
+				Print("I5: icon cache disabled");
+				return;
+			case Console::Action::kEnableCache:
+				I4Hook::SetBypass(false);
+				Print("I5: icon cache enabled");
+				return;
+			case Console::Action::kPurge:
+				Print("I5: icon cache purged (" + std::to_string(I4Hook::ClearCache()) + " entries cleared)");
+				return;
 			case Console::Action::kMemoOn:
 				InvalidateMemo::SetEnabled(true);
-				Print("I5: invalidate memo ON (skips redundant itemList reprocess)");
+				Print("I5: Skip redundant SkyUI refreshes enabled");
 				return;
 			case Console::Action::kMemoOff:
 				InvalidateMemo::SetEnabled(false);
-				Print("I5: invalidate memo OFF (every InvalidateData runs)");
+				Print("I5: Skip redundant SkyUI refreshes disabled");
 				return;
 			case Console::Action::kUsage:
-				Print("I5: usage - i5 purge | status | debug on|off | bypass on|off | verify on|off | memo on|off");
+				Print("I5: usage - i5 disable | enable | status | debug on|off | verify on|off | cache enable|disable|purge | skyui inventory-dedupe enable|disable");
 				return;
 			case Console::Action::kNone:
 				break;

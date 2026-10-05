@@ -2,6 +2,7 @@
 
 #include "FavoritesHook.h"
 #include "FavoritesKeywords.h"
+#include "Features.h"
 #include "KeywordFill.h"
 
 #include <span>
@@ -13,7 +14,7 @@ namespace InventoryInjectorImproved::FavoritesKeywords
 		void FillStep(RE::GFxFunctionHandler::Params& a_params)
 		{
 			const std::span<RE::GFxValue> args{ a_params.args, a_params.argCount };
-			if (args.empty() || !args.front().IsObject()) {
+			if (!Features::IsEnabled() || args.empty() || !args.front().IsObject()) {
 				return;
 			}
 

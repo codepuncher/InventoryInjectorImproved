@@ -43,6 +43,7 @@ namespace InventoryInjectorImproved::I4Hook
 	std::size_t ClearCache();
 	CacheStats  GetCacheStats();
 	void        SetBypass(bool a_on);
+	bool        CacheEnabled();
 	void        SetDebugLogging(bool a_on);
 	TimingStats GetTimingStats();
 	void        Save(SKSE::SerializationInterface* a_intfc);

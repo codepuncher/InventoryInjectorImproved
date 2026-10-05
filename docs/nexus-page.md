@@ -30,9 +30,9 @@ I5 is a general fix and performance addon for I4.
 
 [font=Times New Roman][size=4]FEATURES[/size][/font]
 [list]
-[*][b]Faster item menus:[/b] the lag when switching tabs, navigating items, or using or dropping items can drop the frame rate massively in large inventories. I4 rebuilds every item's icon data each time a menu's item list refreshes, which takes about 90ms for 200 items and grows with item count. I5 caches that work per item, so each refresh only processes new items. The cache is saved with your game, so the first menu open after loading a save is fast too.
+[*][b]Icon cache:[/b] the lag when switching tabs, navigating items, or using or dropping items can drop the frame rate massively in large inventories. I4 rebuilds every item's icon data each time a menu's item list refreshes, which takes about 90ms for 200 items and grows with item count. I5 caches that work per item, so each refresh only processes new items. The cache is saved with your game, so the first menu open after loading a save is fast too.
 [*][b]Favorites crash fix:[/b] fixes the crash to desktop when opening the Favorites menu with I4 1.1.1 on Skyrim versions before 1.7.
-[*][b]Alchemy keyword fix:[/b] applies I4's keyword icon rules to alchemy table ingredients.
+[*][b]Alchemy icon fix:[/b] applies I4's keyword icon rules to alchemy table ingredients.
 [*][b]Faster SkyUI list refresh:[/b] when the inventory list refreshes, SkyUI checks every category tab against every item to decide which tabs are empty. I5 does that check in one step, so large inventories refresh faster.
 [*][b]Skip redundant SkyUI refreshes:[/b] when SkyUI's item list would refresh with the same items as its last refresh, I5 skips the redundant refresh, so I4 doesn't rebuild the icons again.
 [/list]
@@ -82,9 +82,9 @@ I5 is a general fix and performance addon for I4.
 
 [font=Times New Roman][size=5]CONSOLE COMMANDS[/size][/font]
 [list]
-[*][font=Courier New]i5 status[/font]: prints cache size, how many entries were restored from the co-save this session, and the last and worst refresh timings.
-[*][font=Courier New]i5 purge[/font]: clears the icon cache. Use it if icons look wrong after updating I4, then save.
+[*][font=Courier New]i5 status[/font]: prints cache size, how many entries were restored from the SKSE co-save this session, the last and worst refresh timings, and which features are on.
 [*][font=Courier New]i5 debug on|off[/font]: turns per-refresh timing logging to the log file on or off.
+[*][font=Courier New]i5 cache purge[/font]: clears the icon cache. Use it if icons look wrong after updating I4, then save.
 [/list]
 
 [font=Times New Roman][size=5]FAQ[/size][/font]
@@ -96,16 +96,16 @@ I5 is a general fix and performance addon for I4.
 If you need it then just ask and I'll add support.[/spoiler]
 
 [b]Is it safe to add or remove mid-playthrough?[/b]
-[spoiler]Yes. I5 has no ESP and changes no game records. Its co-save only holds the icon cache: on a save without one, the cache fills as you open menus, and if you remove I5, SKSE skips its co-save data.[/spoiler]
+[spoiler]Yes. I5 has no ESP and changes no game records. Its SKSE co-save only holds the icon cache: on a save without one, the cache fills as you open menus, and if you remove I5, SKSE skips its co-save data.[/spoiler]
 
 [b]Icons look wrong after I updated I4. What do I do?[/b]
-[spoiler]Run [font=Courier New]i5 purge[/font], then save. The cache resets itself on load when your plugins or I4 configs change, but it can't tell when I4 itself is updated. Saves made before the update keep their old cache until you purge and save over them.[/spoiler]
+[spoiler]Run [font=Courier New]i5 cache purge[/font], then save. The cache resets itself on load when your plugins or I4 configs change, but it can't tell when I4 itself is updated. Saves made before the update keep their old cache until you purge and save over them.[/spoiler]
 
 [b]My game crashed. What do I attach to a bug report?[/b]
 [spoiler]Install [url=https://www.nexusmods.com/skyrimspecialedition/mods/59596]Crash Logger SSE[/url], reproduce the crash, then post a bug report in the Bugs tab with the newest crash-*.log from your SKSE log folder attached.[/spoiler]
 
 [b]How do I know it's working?[/b]
-[spoiler]Run [font=Courier New]i5 status[/font]. It shows the cache size, how many entries came from the co-save, and the last and worst refresh times.[/spoiler]
+[spoiler]Run [font=Courier New]i5 status[/font]. It shows the cache size, how many entries came from the SKSE co-save, the last and worst refresh times, and which features are on.[/spoiler]
 
 [b]Why is the first menu open on a new save slower?[/b]
 [spoiler]There is no cache yet, so I4 does its full work once. After that, the cache is kept in your saves.[/spoiler]
