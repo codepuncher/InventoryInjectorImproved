@@ -148,9 +148,12 @@ If you cloned before the submodule moved to `alandtse/CommonLibSSE-NG`, run `git
 
 These are developer diagnostics, not needed for normal play:
 
-- `i5 bypass on|off`: bypasses the cache entirely, serving every item straight from I4 (raw I4, not cached). Use it to compare cached vs. uncached behavior.
-- `i5 verify on|off`: turns on an assertion pass that checks the `InvalidateListData` O(N+C) fast path produces the same flags as vanilla, logging any mismatch. Off uses the fast path without the check.
-- `i5 memo on|off`: turns the invalidate memo on or off. On, it skips a redundant itemList reprocess when nothing relevant changed; off, every `InvalidateData` call runs in full.
+- `i5 disable`: turns off the icon cache, alchemy icon fix, Faster SkyUI list refresh, and Skip redundant SkyUI refreshes, so menus run vanilla I4 and SkyUI. Use it to compare I5 against vanilla.
+- `i5 enable`: turns the icon cache, alchemy icon fix, Faster SkyUI list refresh, and Skip redundant SkyUI refreshes back on. If you turned the cache off with `i5 cache disable`, it stays off until you run `i5 cache enable`.
+- `i5 verify on|off`: turns on an assertion check that the `InvalidateListData` O(N+C) fast path produces the same flags as vanilla, logging any mismatch. Off uses the fast path without the check.
+- `i5 cache disable`: bypasses the icon cache only, serving every item straight from I4. The alchemy icon fix and the other features stay on. Use it to compare cached vs. uncached behavior.
+- `i5 cache enable`: turns the icon cache back on. This is the default.
+- `i5 skyui inventory-dedupe enable|disable`: turns skipping redundant SkyUI refreshes on or off. On, it skips redundant SkyUI refreshes when the item list hasn't changed; off, every SkyUI refresh runs in full.
 
 ## Diagnostic builds
 

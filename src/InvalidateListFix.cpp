@@ -3,6 +3,7 @@
 #include "InvalidateListFix.h"
 
 #include "CategoryFlags.h"
+#include "Features.h"
 #include "FrameProbe.h"
 #include "GFxArrayUtil.h"
 
@@ -83,6 +84,10 @@ namespace InventoryInjectorImproved::InvalidateListFix
 
 			void Call(Params& a_params) override
 			{
+				if (!Features::IsEnabled()) {
+					InvokeOriginal(a_params);
+					return;
+				}
 				if (VerifyFlag()) {
 					RunVerify(a_params);
 					return;

@@ -10,15 +10,17 @@ namespace InventoryInjectorImproved::Console
 	enum class Action
 	{
 		kNone,  // not our namespace; caller runs the original command
-		kPurge,
-		kStatus,
 		kUsage,
+		kDisableAll,
+		kEnableAll,
+		kStatus,
 		kDebugOn,
 		kDebugOff,
-		kBypassOn,
-		kBypassOff,
 		kVerifyOn,
 		kVerifyOff,
+		kDisableCache,
+		kEnableCache,
+		kPurge,
 		kMemoOn,
 		kMemoOff
 	};
@@ -59,8 +61,11 @@ namespace InventoryInjectorImproved::Console
 		if (tokens.empty() || tokens.front() != "i5") {
 			return Action::kNone;
 		}
-		if (tokens.size() == 2 && tokens[1] == "purge") {
-			return Action::kPurge;
+		if (tokens.size() == 2 && tokens[1] == "disable") {
+			return Action::kDisableAll;
+		}
+		if (tokens.size() == 2 && tokens[1] == "enable") {
+			return Action::kEnableAll;
 		}
 		if (tokens.size() == 2 && tokens[1] == "status") {
 			return Action::kStatus;
@@ -73,14 +78,6 @@ namespace InventoryInjectorImproved::Console
 				return Action::kDebugOff;
 			}
 		}
-		if (tokens.size() == 3 && tokens[1] == "bypass") {
-			if (tokens[2] == "on") {
-				return Action::kBypassOn;
-			}
-			if (tokens[2] == "off") {
-				return Action::kBypassOff;
-			}
-		}
 		if (tokens.size() == 3 && tokens[1] == "verify") {
 			if (tokens[2] == "on") {
 				return Action::kVerifyOn;
@@ -89,11 +86,20 @@ namespace InventoryInjectorImproved::Console
 				return Action::kVerifyOff;
 			}
 		}
-		if (tokens.size() == 3 && tokens[1] == "memo") {
-			if (tokens[2] == "on") {
+		if (tokens.size() == 3 && tokens[1] == "cache" && tokens[2] == "disable") {
+			return Action::kDisableCache;
+		}
+		if (tokens.size() == 3 && tokens[1] == "cache" && tokens[2] == "enable") {
+			return Action::kEnableCache;
+		}
+		if (tokens.size() == 3 && tokens[1] == "cache" && tokens[2] == "purge") {
+			return Action::kPurge;
+		}
+		if (tokens.size() == 4 && tokens[1] == "skyui" && tokens[2] == "inventory-dedupe") {
+			if (tokens[3] == "enable") {
 				return Action::kMemoOn;
 			}
-			if (tokens[2] == "off") {
+			if (tokens[3] == "disable") {
 				return Action::kMemoOff;
 			}
 		}
