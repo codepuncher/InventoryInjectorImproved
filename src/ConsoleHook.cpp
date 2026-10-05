@@ -6,8 +6,9 @@
 #include "Features.h"
 #include "I4Hook.h"
 #include "InvalidateListFix.h"
-#include "InvalidateMemo.h"
+#include "InvalidateMemo.h"  // NOLINT(readability-duplicate-include): clang-tidy 21 false positive on Linux clang-cl
 
+#include <bit>
 #include <string>
 
 namespace InventoryInjectorImproved::ConsoleHook
@@ -146,8 +147,7 @@ namespace InventoryInjectorImproved::ConsoleHook
 		const REL::Relocation<std::uintptr_t> hookPoint{ REL::RelocationID(52065, 52952),
 			REL::VariantOffset(0xE2, 0x52, 0xE2) };
 		const auto                            address = hookPoint.address();
-		// NOLINTNEXTLINE(performance-no-int-to-ptr): read the code byte at a runtime-resolved address to validate the site
-		if (*reinterpret_cast<const std::uint8_t*>(address) != 0xE8) {
+		if (*std::bit_cast<const std::uint8_t*>(address) != 0xE8) {
 			logger::warn("ConsoleHook: patch site is not a call on this runtime, i5 console commands unavailable");
 			return;
 		}

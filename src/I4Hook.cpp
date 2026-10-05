@@ -7,7 +7,7 @@
 #include "CacheKey.h"
 #include "CacheSerialization.h"
 #include "Features.h"
-#include "FrameProbe.h"  // NOLINT(readability-duplicate-include): false positive, included once and required
+#include "FrameProbe.h"  // NOLINT(readability-duplicate-include): clang-tidy 21 false positive on Linux clang-cl
 #include "GFxArrayUtil.h"
 #include "KeywordFill.h"
 
@@ -15,10 +15,8 @@
 #include <array>
 #include <atomic>
 #include <cstring>
-#include <filesystem>  // NOLINT(readability-duplicate-include): false positive, included once and required
-#include <optional>
+#include <optional>  // NOLINT(readability-duplicate-include): clang-tidy 21 false positive on Linux clang-cl
 #include <span>
-#include <unordered_map>  // NOLINT(readability-duplicate-include): already included by PCH.h
 
 namespace InventoryInjectorImproved::I4Hook
 {
@@ -419,8 +417,7 @@ namespace InventoryInjectorImproved::I4Hook
 			return a_list.GetMember("_entryList", &a_out) && a_out.IsArray();
 		}
 
-		// NOLINTNEXTLINE(bugprone-exception-escape): move ctor may throw only via RE::GFxValue; fine for this transient carrier
-		struct Miss
+		struct Miss  // NOLINT(bugprone-exception-escape): Miss is emplaced into storage reserved to a_count, so its implicit move never runs
 		{
 			RE::GFxValue                                  entry;
 			std::uint64_t                                 key{ 0 };
@@ -578,7 +575,7 @@ namespace InventoryInjectorImproved::I4Hook
 				if (!formID) {
 					addClassify();
 					++a_res.noIdMisses;
-					a_res.misses.push_back({ .entry = a_entry, .key = 0, .before = {}, .target = CacheTarget::kStatic });
+					a_res.misses.emplace_back(a_entry, std::uint64_t{ 0 }, std::unordered_map<std::string, RE::GFxValue>{}, CacheTarget::kStatic);
 					return;
 				}
 
@@ -611,7 +608,7 @@ namespace InventoryInjectorImproved::I4Hook
 				if (dynamic) {
 					++a_res.dynamicMisses;
 				}
-				a_res.misses.push_back({ .entry = a_entry, .key = key, .before = Snapshot(a_entry), .target = dynamic ? CacheTarget::kDynamic : CacheTarget::kStatic, .token = token });
+				a_res.misses.emplace_back(a_entry, key, Snapshot(a_entry), dynamic ? CacheTarget::kDynamic : CacheTarget::kStatic, token);
 			}
 
 			/**
@@ -738,9 +735,12 @@ namespace InventoryInjectorImproved::I4Hook
 				const auto i0 = std::chrono::high_resolution_clock::now();
 				bool       ok = false;
 				{
-					const auto restore = SKSE::stl::scope_exit([&list, &entries] {
+					const auto restore = SKSE::stl::scope_exit([&list, &entries] noexcept {
 						if (!list.SetMember("_entryList", entries)) {
-							logger::error("I4Hook: failed to restore _entryList after processing misses");
+							try {
+								logger::error("I4Hook: failed to restore _entryList after processing misses");
+							} catch (...) {  // NOLINT(bugprone-empty-catch): a failed log has no channel to report, and rethrowing would terminate
+							}
 						}
 					});
 					ok = InvokeOriginal(a_params, a_args);

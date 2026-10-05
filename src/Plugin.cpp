@@ -2,10 +2,10 @@
 
 #include "ConsoleHook.h"
 #include "FavoritesCrashFix.h"
-#include "FavoritesKeywords.h"
+#include "FavoritesKeywords.h"  // NOLINT(readability-duplicate-include): clang-tidy 21 false positive on Linux clang-cl
 #include "FrameProbe.h"
 #include "I4Hook.h"
-#include "InvalidateListFix.h"  // NOLINT(readability-duplicate-include): included once; no other header in this file includes it
+#include "InvalidateListFix.h"  // NOLINT(readability-duplicate-include): clang-tidy 21 false positive on Linux clang-cl
 #include "InvalidateMemo.h"
 #include "TrampolineBudget.h"
 

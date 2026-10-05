@@ -269,9 +269,7 @@ jobs:
           restore-keys: vcpkg-linux-
 
       - name: Configure and Build
-        run: |
-          cmake --preset release-linux
-          cmake --build --preset release-linux
+        run: ./scripts/build.sh
         env:
           VCPKG_BINARY_SOURCES: "clear;files,${{ runner.temp }}/vcpkg-cache,readwrite"
 
@@ -322,4 +320,4 @@ jobs:
         run: |
           $files = Get-ChildItem -Path src -Include *.cpp -Recurse |
             Select-Object -ExpandProperty FullName
-          clang-tidy.exe -p build/tidy $files
+          clang-tidy.exe -p build/tidy --warnings-as-errors='*' $files
