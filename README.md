@@ -14,6 +14,11 @@ no game data and ships no SWFs, so it has no file conflicts.
 - **Favorites crash fix:** fixes the crash to desktop when opening the Favorites menu with
   I4 1.1.1 on Skyrim versions before 1.7.
 - **Alchemy keyword fix:** applies I4's keyword icon rules to alchemy table ingredients.
+- **Faster SkyUI list refresh:** when the inventory list refreshes, SkyUI checks every category
+  tab against every item to decide which tabs are empty. I5 does that check in one step,
+  so large inventories refresh faster.
+- **Skip redundant SkyUI refreshes:** when SkyUI's item list would refresh with the same items
+  as its last refresh, I5 skips the redundant refresh, so I4 doesn't rebuild the icons again.
 
 ---
 

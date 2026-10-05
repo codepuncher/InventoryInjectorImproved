@@ -33,6 +33,8 @@ I5 is a general fix and performance addon for I4.
 [*][b]Faster item menus:[/b] the lag when switching tabs, navigating items, or using or dropping items can drop the frame rate massively in large inventories. I4 rebuilds every item's icon data each time a menu's item list refreshes, which takes about 90ms for 200 items and grows with item count. I5 caches that work per item, so each refresh only processes new items. The cache is saved with your game, so the first menu open after loading a save is fast too.
 [*][b]Favorites crash fix:[/b] fixes the crash to desktop when opening the Favorites menu with I4 1.1.1 on Skyrim versions before 1.7.
 [*][b]Alchemy keyword fix:[/b] applies I4's keyword icon rules to alchemy table ingredients.
+[*][b]Faster SkyUI list refresh:[/b] when the inventory list refreshes, SkyUI checks every category tab against every item to decide which tabs are empty. I5 does that check in one step, so large inventories refresh faster.
+[*][b]Skip redundant SkyUI refreshes:[/b] when SkyUI's item list would refresh with the same items as its last refresh, I5 skips the redundant refresh, so I4 doesn't rebuild the icons again.
 [/list]
 
 [font=Times New Roman][size=4]MENUS COVERED[/size][/font]
