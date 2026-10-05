@@ -6,6 +6,7 @@
 #include "CacheFingerprint.h"
 #include "CacheKey.h"
 #include "CacheSerialization.h"
+#include "Features.h"
 #include "FrameProbe.h"  // NOLINT(readability-duplicate-include): false positive, included once and required
 #include "GFxArrayUtil.h"
 #include "KeywordFill.h"
@@ -455,7 +456,7 @@ namespace InventoryInjectorImproved::I4Hook
 			void Call(Params& a_params) override
 			{
 				const std::span<RE::GFxValue> args{ a_params.args, a_params.argCount };
-				if (args.empty() || !args.front().IsObject()) {
+				if (!Features::IsEnabled() || args.empty() || !args.front().IsObject()) {
 					CallOriginal(a_params, args);
 					return;
 				}
@@ -474,9 +475,7 @@ namespace InventoryInjectorImproved::I4Hook
 				const std::uint32_t count = entryList.GetArraySize();
 
 				const bool bypass = State().bypass.load(std::memory_order_relaxed);
-				if (!bypass) {
-					FillMissingKeywords(a_params.movie, entryList);
-				}
+				FillMissingKeywords(a_params.movie, entryList);
 
 				/**
 				 * No _entryList field to swap misses into later, so classifying now would
@@ -488,7 +487,7 @@ namespace InventoryInjectorImproved::I4Hook
 				}
 
 				if (bypass) {
-					RunPassthrough(a_params, args, menu, count, wantLog, "bypass on (raw I4)");
+					RunPassthrough(a_params, args, menu, count, wantLog, "cache disabled");
 					return;
 				}
 
@@ -511,7 +510,7 @@ namespace InventoryInjectorImproved::I4Hook
 		private:
 			/**
 			 * A raw, uncached I4 call with no classify pass: used both for manual
-			 * `i5 bypass on` and for a list whose entries can't be swapped for misses.
+			 * `i5 cache disable` and for a list whose entries can't be swapped for misses.
 			 * Excluded from the cached-path worst-case stat (see RecordTiming).
 			 */
 			void RunPassthrough(Params& a_params, std::span<RE::GFxValue> a_args, const char* a_menu,
@@ -651,7 +650,7 @@ namespace InventoryInjectorImproved::I4Hook
 				logger::debug(
 					"I4 processList [{}] {} entries | {} hits, {} misses ({} dynamic, {} no-id) | "
 					"classify {} us, apply {} us, i4 {} us, total {} us | "
-					"cache {} | dyncache {} | bypass off",
+					"cache {} | dyncache {}",
 					a_menu,
 					a_count,
 					a_cr.hits,
@@ -847,6 +846,11 @@ namespace InventoryInjectorImproved::I4Hook
 	void SetBypass(bool a_on)
 	{
 		State().bypass.store(a_on, std::memory_order_relaxed);
+	}
+
+	bool CacheEnabled()
+	{
+		return !State().bypass.load(std::memory_order_relaxed);
 	}
 
 	void SetDebugLogging(bool a_on)

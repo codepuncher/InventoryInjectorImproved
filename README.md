@@ -6,14 +6,14 @@ no game data and ships no SWFs, so it has no file conflicts.
 
 ## Features
 
-- **Faster item menus:** I4 recomputes every item's icon data from scratch on *every*
+- **Icon cache:** I4 recomputes every item's icon data from scratch on *every*
   item-list refresh, so switching tabs, navigating items, or using/dropping an item can
   drop the frame rate massively in large inventories. A refresh takes about 90 ms for
   200 items, and the cost grows with item count. I5 caches that work per item, cutting the
   per-refresh cost to a few milliseconds.
 - **Favorites crash fix:** fixes the crash to desktop when opening the Favorites menu with
   I4 1.1.1 on Skyrim versions before 1.7.
-- **Alchemy keyword fix:** applies I4's keyword icon rules to alchemy table ingredients.
+- **Alchemy icon fix:** applies I4's keyword icon rules to alchemy table ingredients.
 - **Faster SkyUI list refresh:** when the inventory list refreshes, SkyUI checks every category
   tab against every item to decide which tabs are empty. I5 does that check in one step,
   so large inventories refresh faster.
@@ -81,7 +81,7 @@ magic uses `MagicIconSetter`.
 Soul gems are cached per fill level, since a gem's icon depends on how full it is. Items
 created at runtime (form IDs starting `0xFF`) are cached only for the current game session
 and not saved between sessions, because the engine can reuse those IDs for a different item
-later. The rest of the cache is saved in your save file's co-save, so the first menu open
+later. The rest of the cache is saved in your save file's SKSE co-save, so the first menu open
 after loading a save is fast too, and it's rebuilt automatically if your I4 icon configs or
 load order change. A diagnostic log is written to
 `Documents/My Games/Skyrim Special Edition/SKSE/InventoryInjectorImproved.log`
@@ -97,11 +97,11 @@ I5 doesn't cache Favorites because it's a small list that's rarely heavy, so cac
 
 | Command | Effect |
 |---|---|
-| `i5 status` | Prints cache size, how many entries were restored from the co-save this session, and the last and worst refresh timings. |
-| `i5 purge` | Clears the icon cache. Use it if icons look wrong after updating I4, then save. |
+| `i5 status` | Prints cache size, how many entries were restored from the SKSE co-save this session, the last and worst refresh timings, and which features are on. |
 | `i5 debug on\|off` | Turns per-refresh timing logging to the log file on or off. |
+| `i5 cache purge` | Clears the icon cache. Use it if icons look wrong after updating I4, then save. |
 
-`i5 bypass`, `i5 verify` and `i5 memo` are developer diagnostics: see [CONTRIBUTING.md](CONTRIBUTING.md#diagnostic-console-commands).
+`i5 disable`, `i5 enable`, `i5 verify on|off`, `i5 cache enable|disable` and `i5 skyui inventory-dedupe enable|disable` are developer diagnostics: see [CONTRIBUTING.md](CONTRIBUTING.md#diagnostic-console-commands).
 
 ## Reporting bugs
 
