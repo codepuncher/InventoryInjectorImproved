@@ -6,7 +6,7 @@ no game data and ships no SWFs, so it has no file conflicts.
 
 ## Features
 
-- **Icon cache:** I4 recomputes every item's icon data from scratch on *every*
+- **Icon cache:** I4 recomputes every item's icon data from scratch on _every_
   item-list refresh, so switching tabs, navigating items, or using/dropping an item can
   drop the frame rate massively in large inventories. A refresh takes about 90 ms for
   200 items, and the cost grows with item count. I5 caches that work per item, cutting the
@@ -34,11 +34,13 @@ no game data and ships no SWFs, so it has no file conflicts.
 ## Installation
 
 **Mod manager (recommended):**
+
 1. Install the requirements above.
 2. Install I5 via your mod manager.
 3. Launch Skyrim via SKSE.
 
 **Manual:**
+
 1. Install the requirements above.
 2. Copy `InventoryInjectorImproved.dll` to `Data\SKSE\Plugins\`.
 3. Launch Skyrim via SKSE.
@@ -64,6 +66,7 @@ no game data and ships no SWFs, so it has no file conflicts.
 - [QuickLoot IE](https://www.nexusmods.com/skyrimspecialedition/mods/120075)
 - [The Handy Icon Collection Collective](https://www.nexusmods.com/skyrimspecialedition/mods/90508)
 - [TrueHUD - Inventory Injector Patch](https://www.nexusmods.com/skyrimspecialedition/mods/157139)
+
 <!-- nexus:end -->
 
 ---
@@ -95,11 +98,11 @@ I5 doesn't cache Favorites because it's a small list that's rarely heavy, so cac
 
 ## Console commands
 
-| Command | Effect |
-|---|---|
-| `i5 status` | Prints cache size, how many entries were restored from the SKSE co-save this session, the last and worst refresh timings, and which features are on. |
-| `i5 debug on\|off` | Turns per-refresh timing logging to the log file on or off. |
-| `i5 cache purge` | Clears the icon cache. Use it if icons look wrong after updating I4, then save. |
+| Command            | Effect                                                                                                                                               |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `i5 status`        | Prints cache size, how many entries were restored from the SKSE co-save this session, the last and worst refresh timings, and which features are on. |
+| `i5 debug on\|off` | Turns per-refresh timing logging to the log file on or off.                                                                                          |
+| `i5 cache purge`   | Clears the icon cache. Use it if icons look wrong after updating I4, then save.                                                                      |
 
 `i5 disable`, `i5 enable`, `i5 verify on|off`, `i5 cache enable|disable` and `i5 skyui inventory-dedupe enable|disable` are developer diagnostics: see [CONTRIBUTING.md](CONTRIBUTING.md#diagnostic-console-commands).
 
