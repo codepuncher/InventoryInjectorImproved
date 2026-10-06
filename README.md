@@ -4,13 +4,20 @@
 addon for **I4 (Inventory Interface Information Injector)**. It is an SKSE plugin that changes
 no game data and ships no SWFs, so it has no file conflicts.
 
+---
+
+<!-- nexus:start -->
+
 ## Features
 
 - **Icon cache:** I4 recomputes every item's icon data from scratch on _every_
   item-list refresh, so switching tabs, navigating items, or using/dropping an item can
   drop the frame rate massively in large inventories. A refresh takes about 90 ms for
-  200 items, and the cost grows with item count. I5 caches that work per item, cutting the
-  per-refresh cost to a few milliseconds.
+  200 items, and the cost grows with item count. I5 caches that work per item in player
+  inventory, containers (including follower inventories), barter, crafting (smithing,
+  smelting, tanning, cooking, alchemy and enchanting), and magic menus, cutting the
+  per-refresh cost to a few milliseconds. The cache is saved with your save, so the first
+  menu open after loading a save is fast too.
 - **Favorites crash fix:** fixes the crash to desktop when opening the Favorites menu with
   I4 1.1.1 on Skyrim versions before 1.7.
 - **Alchemy icon fix:** applies I4's keyword icon rules to alchemy table ingredients.
@@ -19,10 +26,6 @@ no game data and ships no SWFs, so it has no file conflicts.
   so large inventories refresh faster.
 - **Skip redundant SkyUI refreshes:** when SkyUI's item list would refresh with the same items
   as its last refresh, I5 skips the redundant refresh, so I4 doesn't rebuild the icons again.
-
----
-
-<!-- nexus:start -->
 
 ## Requirements
 
@@ -54,6 +57,7 @@ no game data and ships no SWFs, so it has no file conflicts.
 
 **Known compatible mods:**
 
+- [A.S.S. for B.O.O.B.I.E.S.](https://www.nexusmods.com/skyrimspecialedition/mods/89823)
 - [Aura's Inventory Tweaks](https://www.nexusmods.com/skyrimspecialedition/mods/68557)
 - [B.O.O.B.I.E.S (Immersive Icons)](https://www.nexusmods.com/skyrimspecialedition/mods/89241)
 - [Compare Equipment NG](https://www.nexusmods.com/skyrimspecialedition/mods/158874)
@@ -63,9 +67,18 @@ no game data and ships no SWFs, so it has no file conflicts.
 - [I4 Weapon Icons Overhaul](https://www.nexusmods.com/skyrimspecialedition/mods/106432)
 - [Infinity UI](https://www.nexusmods.com/skyrimspecialedition/mods/74483)
 - [NORDIC UI](https://www.nexusmods.com/skyrimspecialedition/mods/49881)
+- [P.E.N.I.S. for B.O.O.B.I.E.S.](https://www.nexusmods.com/skyrimspecialedition/mods/90526)
 - [QuickLoot IE](https://www.nexusmods.com/skyrimspecialedition/mods/120075)
 - [The Handy Icon Collection Collective](https://www.nexusmods.com/skyrimspecialedition/mods/90508)
 - [TrueHUD - Inventory Injector Patch](https://www.nexusmods.com/skyrimspecialedition/mods/157139)
+
+## Console commands
+
+| Command            | Effect                                                                                                                                               |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `i5 status`        | Prints cache size, how many entries were restored from the SKSE co-save this session, the last and worst refresh timings, and which features are on. |
+| `i5 debug on\|off` | Turns per-refresh timing logging to the log file on or off.                                                                                          |
+| `i5 cache purge`   | Clears the icon cache. Use it if icons look wrong after updating I4, then save.                                                                      |
 
 <!-- nexus:end -->
 
@@ -96,16 +109,6 @@ A fix is included in I5 to prevent the crash to desktop that happens when openin
 
 I5 doesn't cache Favorites because it's a small list that's rarely heavy, so caching it would save little.
 
-## Console commands
-
-| Command            | Effect                                                                                                                                               |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `i5 status`        | Prints cache size, how many entries were restored from the SKSE co-save this session, the last and worst refresh timings, and which features are on. |
-| `i5 debug on\|off` | Turns per-refresh timing logging to the log file on or off.                                                                                          |
-| `i5 cache purge`   | Clears the icon cache. Use it if icons look wrong after updating I4, then save.                                                                      |
-
-`i5 disable`, `i5 enable`, `i5 verify on|off`, `i5 cache enable|disable` and `i5 skyui inventory-dedupe enable|disable` are developer diagnostics: see [CONTRIBUTING.md](CONTRIBUTING.md#diagnostic-console-commands).
-
 ## Reporting bugs
 
 Open a [GitHub issue](https://github.com/codepuncher/InventoryInjectorImproved/issues). If Skyrim crashed to
@@ -116,6 +119,10 @@ crash, and attach the `crash-*.log` it writes to the same SKSE log folder as I5'
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for building, testing and code style, and
 [docs/RELEASING.md](docs/RELEASING.md) for the release process.
+
+Developer console commands (`i5 disable`, `i5 enable`, `i5 verify on|off`, `i5 cache enable|disable`
+and `i5 skyui inventory-dedupe enable|disable`) are documented in
+[CONTRIBUTING.md](CONTRIBUTING.md#diagnostic-console-commands).
 
 ## License
 

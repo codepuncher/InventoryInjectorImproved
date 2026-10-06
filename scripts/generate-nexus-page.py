@@ -65,15 +65,36 @@ def md_to_bbcode(md: str) -> str:
                 i += 1
             continue
 
-        # Unordered list block
+        # Unordered list block; indented lines continue the previous item
         if line.startswith("- "):
             items: list[str] = []
-            while i < len(lines) and lines[i].startswith("- "):
-                items.append(convert_inline(lines[i][2:].strip()))
+            while i < len(lines) and (lines[i].startswith("- ") or lines[i].startswith("  ")):
+                if lines[i].startswith("- "):
+                    items.append(lines[i][2:].strip())
+                else:
+                    items[-1] += " " + lines[i].strip()
                 i += 1
             output.append("[list]")
             for item in items:
-                output.append(f"[*]{item}")
+                output.append(f"[*]{convert_inline(item)}")
+            output.append("[/list]")
+            continue
+
+        if line.startswith("|"):
+            rows: list[str] = []
+            while i < len(lines) and lines[i].startswith("|"):
+                rows.append(lines[i])
+                i += 1
+            output.append("[list]")
+            for row in rows[2:]:
+                cells = [
+                    cell.strip().replace(r"\|", "|")
+                    for cell in re.split(r"(?<!\\)\|", row.strip())[1:-1]
+                ]
+                if len(cells) != 2:
+                    sys.exit(f"error: nexus table rows need 2 columns: {row!r}")
+                name, effect = cells
+                output.append(f"[*]{convert_inline(name)}: {convert_inline(effect)}")
             output.append("[/list]")
             continue
 
@@ -120,6 +141,10 @@ def convert_inline(text: str) -> str:
     text = re.sub(r"\[([^\]]+)\]\(([^)]*(?:\([^)]*\)[^)]*)*)\)", r"[url=\2]\1[/url]", text)
     # **text** → [b]text[/b]
     text = re.sub(r"\*\*(.+?)\*\*", r"[b]\1[/b]", text)
+    text = "".join(
+        seg if idx % 2 else re.sub(r"(?<!\w)_(?!\s)(.+?)(?<!\s)_(?!\w)", r"[i]\1[/i]", seg)
+        for idx, seg in enumerate(re.split(r"(`[^`]+`)", text))
+    )
     # `code` → [font=Courier New]code[/font]
     text = re.sub(r"`([^`]+)`", r"[font=Courier New]\1[/font]", text)
     return text

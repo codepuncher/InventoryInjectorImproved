@@ -21,12 +21,12 @@ The version lives in two places: `CMakeLists.txt` (`project(... VERSION x.y.z)`)
 
 ## Nexus Mods page
 
-The `<!-- nexus:start/end -->` block at the top of [README.md](../README.md) is the **source of truth** for Requirements, Installation, and Compatibility. [nexus-page.md](nexus-page.md) holds the rest of the page (short description, overview with its menus-covered list, console commands, FAQ, credits).
+The `<!-- nexus:start/end -->` block in [README.md](../README.md) is the **source of truth** for Features, Requirements, Installation, Compatibility, and Console commands. [nexus-page.md](nexus-page.md) holds the rest of the page (short description, overview intro, FAQ, credits).
 
 To update the Nexus page:
 
-1. Edit Requirements/Installation/Compatibility inside the `<!-- nexus:start/end -->` block in [README.md](../README.md).
-2. Edit the short description, overview, console commands, FAQ, and credits directly in [nexus-page.md](nexus-page.md).
+1. Edit Features, Requirements, Installation, Compatibility, or Console commands inside the `<!-- nexus:start/end -->` block in [README.md](../README.md).
+2. Edit the short description, overview intro, FAQ, and credits directly in [nexus-page.md](nexus-page.md).
    > **Do not edit** the `<!-- generated:start/end -->` block in [nexus-page.md](nexus-page.md): it is overwritten every time the script runs.
 3. Generate the combined BBCode output:
 
