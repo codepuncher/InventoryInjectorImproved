@@ -23,5 +23,10 @@ cmake --preset release-linux
 echo "Building..."
 cmake --build --preset release-linux
 
+if [[ -z "${CI:-}" ]]; then
+    echo "Configuring clang-tidy database..."
+    cmake --preset release-linux -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON -B build/tidy-linux
+fi
+
 echo ""
 echo "Build complete"

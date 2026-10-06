@@ -5,7 +5,6 @@
 #include "KeywordFill.h"
 
 #include <cmath>
-#include <unordered_map>  // NOLINT(readability-duplicate-include): already included by PCH.h
 
 namespace InventoryInjectorImproved
 {

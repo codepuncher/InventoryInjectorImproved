@@ -5,6 +5,7 @@
 #include "FrameSpike.h"
 
 #include <array>
+#include <bit>
 #include <chrono>
 
 #include <fmt/ranges.h>
@@ -29,7 +30,13 @@ namespace InventoryInjectorImproved::FrameProbe
 		 * simply skip the native split rather than mis-patch.
 		 */
 		constexpr std::array<std::uintptr_t, 7> kUpdateImplCallSites{
-			0x8fb99c, 0x8fd9bd, 0x92cd6f, 0x92daef, 0x92e2bb, 0x92f601, 0x92f835
+			0x8fb99c,
+			0x8fd9bd,
+			0x92cd6f,
+			0x92daef,
+			0x92e2bb,
+			0x92f601,
+			0x92f835,
 		};
 
 		/**
@@ -177,12 +184,10 @@ namespace InventoryInjectorImproved::FrameProbe
 			int hooked = 0;
 			for (const auto offset : kUpdateImplCallSites) {
 				const auto address = REL::Offset(offset).address();
-				// NOLINTNEXTLINE(performance-no-int-to-ptr): read the code byte at a runtime-resolved address to validate the site
-				if (*reinterpret_cast<const std::uint8_t*>(address) != 0xE8) {
+				if (*std::bit_cast<const std::uint8_t*>(address) != 0xE8) {
 					continue;
 				}
-				// NOLINTNEXTLINE(performance-no-int-to-ptr): read the call's rel32 displacement to confirm its target
-				const auto rel = *reinterpret_cast<const std::int32_t*>(address + 1);
+				const auto rel = *std::bit_cast<const std::int32_t*>(address + 1);
 				const auto callTarget = address + 5 + static_cast<std::uintptr_t>(static_cast<std::intptr_t>(rel));
 				if (callTarget != target) {
 					continue;
