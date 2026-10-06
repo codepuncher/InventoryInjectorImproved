@@ -48,6 +48,7 @@ Because `workflow_run` always runs the copy of `nexus-upload.yml` committed to `
 Do not restrict the `nexus` environment to tags: `workflow_run`-triggered jobs always execute against the default branch's ref (`refs/heads/main`), not the tag that triggered the upstream `release.yml` run, so a tag-only policy would silently block every auto-triggered upload. A deployment-branch policy limited to `main` is compatible with the auto-trigger and keeps `workflow_dispatch` runs from other branches from reaching the secrets.
 
 **Prerequisites (one-time setup):**
+
 1. Upload your first file manually via the [Nexus Mods web UI](https://www.nexusmods.com): this creates the file that later uploads add versions to.
 2. Note its file ID from the **API Info** option on the mod page's Files tab, or from the file's edit menu on the Manage Files page.
 3. Create the `nexus` environment (Settings → Environments → New environment) with a required reviewer, before the workflow referencing it is merged to `main`. Otherwise GitHub auto-creates it unprotected on first reference.
@@ -60,10 +61,10 @@ Do not restrict the `nexus` environment to tags: `workflow_run`-triggered jobs a
 
 ## CI
 
-| Workflow | Trigger | What it does |
-|---|---|---|
-| `ci.yml` | PRs to `main` touching `src/`, `test/`, `.clang-format`, `.clang-tidy`, `cmake/`, `vcpkg.json`, `.gitmodules`, the `lib/` submodule pins, `CMakeLists.txt`, `CMakePresets.json`, or `ci.yml` itself; also manual `workflow_dispatch` | `clang-format` (ubuntu) → `test` + `build` (windows, parallel) → `clang-tidy` (windows) |
-| `release.yml` | Push of a `v*` tag | Builds, packages via `scripts/package.sh`, publishes a GitHub Release with zip + PDB |
-| `nexus-upload.yml` | Auto-triggered via `workflow_run` once `release.yml` completes, gated on approval in the `nexus` environment; also manual `workflow_dispatch` (see [Nexus Mods upload](#nexus-mods-upload)) | Downloads release zip, generates cliff release notes, uploads to Nexus Mods |
-| `lint.yml` | PRs touching `scripts/` | Runs shellcheck on shell scripts |
-| `pr-title.yml` | PR opened/edited/reopened/synchronize | Checks PR title follows Conventional Commits (`feat`, `fix`, `chore`, `refactor`) |
+| Workflow           | Trigger                                                                                                                                                                                                                              | What it does                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `ci.yml`           | PRs to `main` touching `src/`, `test/`, `.clang-format`, `.clang-tidy`, `cmake/`, `vcpkg.json`, `.gitmodules`, the `lib/` submodule pins, `CMakeLists.txt`, `CMakePresets.json`, or `ci.yml` itself; also manual `workflow_dispatch` | `clang-format` (ubuntu) → `test` + `build` (windows, parallel) → `clang-tidy` (windows) |
+| `release.yml`      | Push of a `v*` tag                                                                                                                                                                                                                   | Builds, packages via `scripts/package.sh`, publishes a GitHub Release with zip + PDB    |
+| `nexus-upload.yml` | Auto-triggered via `workflow_run` once `release.yml` completes, gated on approval in the `nexus` environment; also manual `workflow_dispatch` (see [Nexus Mods upload](#nexus-mods-upload))                                          | Downloads release zip, generates cliff release notes, uploads to Nexus Mods             |
+| `lint.yml`         | PRs touching `scripts/`                                                                                                                                                                                                              | Runs shellcheck on shell scripts                                                        |
+| `pr-title.yml`     | PR opened/edited/reopened/synchronize                                                                                                                                                                                                | Checks PR title follows Conventional Commits (`feat`, `fix`, `chore`, `refactor`)       |
