@@ -18,74 +18,18 @@ Fixes and improves I4: faster item menus (inventories, containers, barter, craft
 
 ## Long Description (BBCode)
 
-<!-- The Requirements, Installation, and Compatibility sections below are generated.
-     Run `python3 scripts/generate-nexus-page.py` and copy the output to Nexus Mods.
+<!-- The Features, Requirements, Installation, Compatibility and Console commands sections are generated
+     from README.md. Run `python3 scripts/generate-nexus-page.py` and copy the output to Nexus Mods.
      Do not copy this file directly: the generated block markers are not valid BBCode. -->
 
 ```bbcode
 [font=Times New Roman][size=5]OVERVIEW[/size][/font]
-[quote]Improves I4's inventory interface interactivity: I5 indexes item icons initially, ignoring identical items in iterations, including in item-heavy inventories. Importantly, it's installed independently, invisibly integrating into I4's implementation.[/quote]
+[quote]Improves I4's inventory interface interactivity: I5 indexes item icons, ignoring identical items in iterations, including in immense inventories. It includes ingredient icon improvements. Importantly, it's installed independently, invisibly integrating into I4's implementation.[/quote]
 
 I5 is a general fix and performance addon for I4.
 
-[font=Times New Roman][size=4]FEATURES[/size][/font]
-[list]
-[*][b]Icon cache:[/b] the lag when switching tabs, navigating items, or using or dropping items can drop the frame rate massively in large inventories. I4 rebuilds every item's icon data each time a menu's item list refreshes, which takes about 90ms for 200 items and grows with item count. I5 caches that work per item, so each refresh only processes new items. The cache is saved with your game, so the first menu open after loading a save is fast too.
-[*][b]Favorites crash fix:[/b] fixes the crash to desktop when opening the Favorites menu with I4 1.1.1 on Skyrim versions before 1.7.
-[*][b]Alchemy icon fix:[/b] applies I4's keyword icon rules to alchemy table ingredients.
-[*][b]Faster SkyUI list refresh:[/b] when the inventory list refreshes, SkyUI checks every category tab against every item to decide which tabs are empty. I5 does that check in one step, so large inventories refresh faster.
-[*][b]Skip redundant SkyUI refreshes:[/b] when SkyUI's item list would refresh with the same items as its last refresh, I5 skips the redundant refresh, so I4 doesn't rebuild the icons again.
-[/list]
-
-[font=Times New Roman][size=4]MENUS COVERED[/size][/font]
-[list]
-[*]Player inventory
-[*]Containers, including follower inventories
-[*]Barter
-[*]Crafting: smithing, smelting, tanning, cooking, alchemy and enchanting
-[*]Magic
-[/list]
-
 <!-- generated:start -->
-
-[font=Times New Roman][size=5]REQUIREMENTS[/size][/font]
-[list]
-[*][url=https://skse.silverlock.org/]SKSE64[/url]
-[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url] (SE/AE) or [url=https://www.nexusmods.com/skyrimspecialedition/mods/58101]VR Address Library for SKSEVR[/url] (VR)
-[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/12604]SkyUI[/url]
-[*][b][url=https://www.nexusmods.com/skyrimspecialedition/mods/85702]I4 - Inventory Interface Information Injector[/url][/b]
-[/list]
-
-[font=Times New Roman][size=5]INSTALLATION[/size][/font]
-[font=Times New Roman][size=4]MOD MANAGER (RECOMMENDED)[/size][/font]
-[list=1]
-[*]Install the requirements above.
-[*]Install I5 via your mod manager.
-[*]Launch Skyrim via SKSE.
-[/list]
-
-[font=Times New Roman][size=4]MANUAL[/size][/font]
-[list=1]
-[*]Install the requirements above.
-[*]Copy [font=Courier New]InventoryInjectorImproved.dll[/font] to [font=Courier New]Data\SKSE\Plugins\[/font].
-[*]Launch Skyrim via SKSE.
-[/list]
-
-[font=Times New Roman][size=5]COMPATIBILITY[/size][/font]
-[list]
-[*]Skyrim SE 1.5.97, AE 1.6.x, 1.7.x, and VR, through Address Library.
-[*]No ESP/ESL; no game records changed.
-[*][b]No SkyUI file conflicts[/b]: it does not replace any SWF and works with SkyUI's stock UI as well as UI patches and reskins.
-[*]Wraps I4's Scaleform hooks at runtime; compatible with I4 icon add-ons.
-[/list]
 <!-- generated:end -->
-
-[font=Times New Roman][size=5]CONSOLE COMMANDS[/size][/font]
-[list]
-[*][font=Courier New]i5 status[/font]: prints cache size, how many entries were restored from the SKSE co-save this session, the last and worst refresh timings, and which features are on.
-[*][font=Courier New]i5 debug on|off[/font]: turns per-refresh timing logging to the log file on or off.
-[*][font=Courier New]i5 cache purge[/font]: clears the icon cache. Use it if icons look wrong after updating I4, then save.
-[/list]
 
 [font=Times New Roman][size=5]FAQ[/size][/font]
 [b]Does I5 fix the favorites menu CTD?[/b]
