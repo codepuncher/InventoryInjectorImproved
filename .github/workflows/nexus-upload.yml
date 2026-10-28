@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version without 'v' prefix (e.g. 1.0.0, 1.0.0-rc.1, 1.0.0+build.1)"
+        description: "Version without 'v' prefix (e.g. 1.0.0)"
         type: string
         required: true
 
@@ -17,7 +17,7 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     environment: nexus
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && !endsWith(github.event.workflow_run.display_title, '(test)'))
 
     permissions:
       contents: read
@@ -29,8 +29,8 @@ jobs:
         env:
           INPUT_VERSION: ${{ inputs.version }}
         run: |
-          if [[ ! "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$ ]]; then
-            echo "Error: version must be in format X.Y.Z (optionally with prerelease/build metadata, e.g. 1.0.0-rc.1+build.1) without 'v' prefix" >&2
+          if [[ ! "${INPUT_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: version must be X.Y.Z without 'v' prefix; test builds don't go to Nexus" >&2
             exit 1
           fi
 
@@ -46,11 +46,11 @@ jobs:
         env:
           INPUT_VERSION: ${{ inputs.version }}
         run: |
-          TAG="$(git tag --points-at HEAD | grep -E '^v[0-9]+\.' | head -n1 || true)"
+          TAG="$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)"
           VERSION="${TAG#v}"
           VERSION="${VERSION:-$INPUT_VERSION}"
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$ ]]; then
-            echo "Error: version must be in format X.Y.Z (optionally with prerelease/build metadata, e.g. 1.0.0-rc.1+build.1) without 'v' prefix" >&2
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: version must be X.Y.Z without 'v' prefix; test builds don't go to Nexus" >&2
             exit 1
           fi
           echo "value=$VERSION" >> "$GITHUB_OUTPUT"
@@ -61,7 +61,7 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.value }}
         run: |
-          PREV="$(git describe --abbrev=0 --tags "v${VERSION}^" 2>/dev/null || echo "")"
+          PREV="$(git describe --abbrev=0 --tags --match 'v[0-9]*' --exclude 'v*-*' "v${VERSION}^" 2>/dev/null || echo "")"
           if [[ -n "$PREV" ]]; then
             echo "value=${PREV}..v${VERSION}" >> "$GITHUB_OUTPUT"
           else

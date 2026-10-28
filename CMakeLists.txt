@@ -1,10 +1,30 @@
 cmake_minimum_required(VERSION 3.21)
 
+# Keeps a -D value from sticking to the build directory.
+set(I5_VERSION "${I5_VERSION}")
+unset(I5_VERSION CACHE)
+if(NOT I5_VERSION)
+    set(I5_VERSION "0.0.0")
+endif()
+if(NOT I5_VERSION MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+(\\.[0-9]+)?$")
+    message(FATAL_ERROR "I5_VERSION must be X.Y.Z or X.Y.Z.W, got '${I5_VERSION}'")
+endif()
+
 project(
     InventoryInjectorImproved
-    VERSION 0.3.1
+    VERSION ${I5_VERSION}
     DESCRIPTION "Fixes and improves I4 (Inventory Interface Information Injector)"
     LANGUAGES CXX)
+
+if(NOT PROJECT_VERSION_TWEAK)
+    set(PROJECT_VERSION_TWEAK 0)
+endif()
+# PluginVersionStamp packs each component into 8 bits.
+foreach(_i5_part ${PROJECT_VERSION_MAJOR} ${PROJECT_VERSION_MINOR} ${PROJECT_VERSION_PATCH} ${PROJECT_VERSION_TWEAK})
+    if(_i5_part GREATER 255)
+        message(FATAL_ERROR "I5_VERSION components must be 0-255, got '${I5_VERSION}'")
+    endif()
+endforeach()
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

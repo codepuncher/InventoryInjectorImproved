@@ -2,22 +2,28 @@
 
 ## Versioning
 
-The version lives in two places: `CMakeLists.txt` (`project(... VERSION x.y.z)`) and `vcpkg.json` (`version-string`). Bump both together.
+The version isn't stored in the repo.
+The Release workflow computes it from the latest `vX.Y.Z` tag and its `bump` input (`scripts/next-version.sh`), then hands it to CMake as `I5_VERSION`.
+CMake embeds it in the DLL, and the co-save validity check reads it.
+Local builds use the `0.0.0` default.
 
-## Cutting a release
+## Making a release
 
-1. Run `./scripts/release.sh <major|minor|patch|X.Y.Z>` on `main`. It bumps
-   `CMakeLists.txt` and `vcpkg.json` on a `chore/release-X.Y.Z` branch, opens
-   a PR (labeled `ignore-for-release`), waits for its checks, squash-merges
-   it, then tags and pushes `vX.Y.Z` — which triggers `release.yml` to build
-   the plugin, package it via `scripts/package.sh`, and publish a GitHub
-   Release with the zip and PDB. The `CMakeLists.txt` version is also
-   embedded in the DLL and read by the co-save validity check, and
-   `release.yml` names the zip after the tag, so keeping all three
-   (files, tag, DLL) in lockstep matters. Requires the GitHub CLI (`gh`),
-   authenticated with push/merge access.
+1. Open **Actions > Release > Run workflow** on `main`.
+   Leave `kind` as `release` and set `bump` to `patch`, `minor`, `major`, or an explicit `X.Y.Z`.
+   The workflow builds the plugin with that version, packages it via `scripts/package.sh`, tags the commit `vX.Y.Z`, and publishes a GitHub Release with the zip and PDB.
+   A release run from any branch other than `main` fails.
+   Release and test runs both fail on a commit that already has a release tag.
 2. `nexus-upload.yml` auto-triggers once `release.yml` finishes. Approve the pending deployment under the `nexus` environment (on the workflow run's page, or the repo's Environments tab) to let the upload proceed. If it doesn't fire, or you need to re-run a failed upload, trigger it manually via workflow_dispatch with the version (no `v` prefix); it must match the tag exactly, since the workflow resolves the tag from the checked-out commit and fails outright if that tag doesn't exist. See [Nexus Mods upload](#nexus-mods-upload) for the environment setup.
 3. If the Nexus page changed, regenerate it (see below) and paste it into the Nexus Mods page editor.
+
+## Test builds
+
+To give someone a build of a branch, run **Actions > Release > Run workflow** on that branch with `kind` set to `test`.
+Set `label` to a short `[a-z0-9-]+` name, for example `vr-support`.
+The workflow publishes a GitHub prerelease tagged `vX.Y.Z-<label>.<run number>`, where `X.Y.Z` is the version `bump` gives.
+The DLL inside reports `X.Y.Z.N`, with `N` from 1 to 255 taken from the run number, so a tester's cache doesn't carry over to the final release.
+Test builds aren't marked as the latest release, never upload to Nexus, and don't count as the base for the next release.
 
 ## Nexus Mods page
 
@@ -61,10 +67,10 @@ Do not restrict the `nexus` environment to tags: `workflow_run`-triggered jobs a
 
 ## CI
 
-| Workflow           | Trigger                                                                                                                                                                                                                              | What it does                                                                            |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `ci.yml`           | PRs to `main` touching `src/`, `test/`, `.clang-format`, `.clang-tidy`, `cmake/`, `vcpkg.json`, `.gitmodules`, the `lib/` submodule pins, `CMakeLists.txt`, `CMakePresets.json`, or `ci.yml` itself; also manual `workflow_dispatch` | `clang-format` (ubuntu) → `test` + `build` (windows, parallel) → `clang-tidy` (windows) |
-| `release.yml`      | Push of a `v*` tag                                                                                                                                                                                                                   | Builds, packages via `scripts/package.sh`, publishes a GitHub Release with zip + PDB    |
-| `nexus-upload.yml` | Auto-triggered via `workflow_run` once `release.yml` completes, gated on approval in the `nexus` environment; also manual `workflow_dispatch` (see [Nexus Mods upload](#nexus-mods-upload))                                          | Downloads release zip, generates cliff release notes, uploads to Nexus Mods             |
-| `lint.yml`         | PRs touching `scripts/`                                                                                                                                                                                                              | Runs shellcheck on shell scripts                                                        |
-| `pr-title.yml`     | PR opened/edited/reopened/synchronize                                                                                                                                                                                                | Checks PR title follows Conventional Commits (`feat`, `fix`, `chore`, `refactor`)       |
+| Workflow           | Trigger                                                                                                                                                                                                                              | What it does                                                                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`           | PRs to `main` touching `src/`, `test/`, `.clang-format`, `.clang-tidy`, `cmake/`, `vcpkg.json`, `.gitmodules`, the `lib/` submodule pins, `CMakeLists.txt`, `CMakePresets.json`, or `ci.yml` itself; also manual `workflow_dispatch` | `clang-format` (ubuntu) → `test` + `build` (windows, parallel) → `clang-tidy` (windows)                                                     |
+| `release.yml`      | Manual `workflow_dispatch` (see [Making a release](#making-a-release) and [Test builds](#test-builds))                                                                                                                               | Computes the version, builds, packages via `scripts/package.sh`, tags the commit, publishes a GitHub Release (or prerelease) with zip + PDB |
+| `nexus-upload.yml` | Auto-triggered via `workflow_run` once `release.yml` completes, gated on approval in the `nexus` environment; also manual `workflow_dispatch` (see [Nexus Mods upload](#nexus-mods-upload))                                          | Downloads release zip, generates cliff release notes, uploads to Nexus Mods                                                                 |
+| `lint.yml`         | PRs touching `scripts/`                                                                                                                                                                                                              | Runs shellcheck on shell scripts                                                                                                            |
+| `pr-title.yml`     | PR opened/edited/reopened/synchronize                                                                                                                                                                                                | Checks PR title follows Conventional Commits (`feat`, `fix`, `chore`, `refactor`)                                                           |
