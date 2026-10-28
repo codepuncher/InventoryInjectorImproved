@@ -9,7 +9,9 @@
 #include "InvalidateMemo.h"  // NOLINT(readability-duplicate-include): clang-tidy 21 false positive on Linux clang-cl
 
 #include <bit>
-#include <string>
+#include <cstdint>
+#include <format>
+#include <string>  // NOLINT(readability-duplicate-include): clang-tidy 21 false positive on Linux clang-cl
 
 namespace InventoryInjectorImproved::ConsoleHook
 {
@@ -33,6 +35,11 @@ namespace InventoryInjectorImproved::ConsoleHook
 				return;
 			}
 			console->Print("%s", a_msg.c_str());
+		}
+
+		std::string FormatHex(std::uint32_t a_formID)
+		{
+			return std::format("{:08X}", a_formID);
 		}
 
 		std::string FormatSample(const char* a_label, const I4Hook::TimingSample& a_s)
@@ -78,8 +85,8 @@ namespace InventoryInjectorImproved::ConsoleHook
 		void CompileAndRun(RE::Script* a_script, RE::ScriptCompiler* a_compiler,
 			RE::COMPILER_NAME a_name, RE::TESObjectREFR* a_targetRef)
 		{
-			const auto action = a_script ? Console::ParseCommand(a_script->GetCommand()) : Console::Action::kNone;
-			switch (action) {
+			const auto parsed = a_script ? Console::Classify(a_script->GetCommand()) : Console::ParsedCommand{};
+			switch (parsed.action) {
 			case Console::Action::kDisableAll:
 				Features::SetEnabled(false);
 				Print("I5: all features disabled");
@@ -126,8 +133,12 @@ namespace InventoryInjectorImproved::ConsoleHook
 				InvalidateMemo::SetEnabled(false);
 				Print("I5: Skip redundant SkyUI refreshes disabled");
 				return;
+			case Console::Action::kInvalidate:
+				Print(std::format("I5: invalidated formID {} ({} entries cleared)",
+					FormatHex(parsed.formID), I4Hook::InvalidateFormID(parsed.formID)));
+				return;
 			case Console::Action::kUsage:
-				Print("I5: usage - i5 disable | enable | status | debug on|off | verify on|off | cache enable|disable|purge | skyui inventory-dedupe enable|disable");
+				Print("I5: usage - i5 disable | enable | status | debug on|off | verify on|off | cache enable|disable|purge | skyui inventory-dedupe enable|disable | invalidate <formid>");
 				return;
 			case Console::Action::kNone:
 				break;

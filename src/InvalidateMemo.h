@@ -20,4 +20,6 @@ namespace InventoryInjectorImproved::InvalidateMemo
 	 */
 	void SetEnabled(bool a_on);
 	bool IsEnabled();
+
+	void ForceReprocess();
 }

@@ -7,6 +7,7 @@
 #include "I4Hook.h"
 #include "InvalidateListFix.h"  // NOLINT(readability-duplicate-include): clang-tidy 21 false positive on Linux clang-cl
 #include "InvalidateMemo.h"
+#include "PluginAPI.h"
 #include "TrampolineBudget.h"
 
 void SetupLog()
@@ -121,7 +122,9 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 	}
 
 	if (!messaging->RegisterListener([](SKSE::MessagingInterface::Message* a_msg) {
-			if (a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
+			if (a_msg->type == SKSE::MessagingInterface::kPostLoad) {
+				InventoryInjectorImproved::PluginAPI::BroadcastAPI(SKSE::GetMessagingInterface());
+			} else if (a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
 				OnDataLoaded();
 			}
 		})) {

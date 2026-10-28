@@ -6,6 +6,7 @@
 #include "GFxArrayUtil.h"
 #include "InvalidateFingerprint.h"
 
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <optional>
@@ -33,6 +34,12 @@ namespace InventoryInjectorImproved::InvalidateMemo
 		{
 			static bool on = true;
 			return on;
+		}
+
+		std::atomic<bool>& ForceReprocessFlag()
+		{
+			static std::atomic<bool> flag{ false };
+			return flag;
 		}
 
 		/**
@@ -245,7 +252,8 @@ namespace InventoryInjectorImproved::InvalidateMemo
 				State&     s = MemoState();
 				const bool fpMatches = s.lastProcessedFp && fp == *s.lastProcessedFp;
 				const bool rendered = ListAlreadyRendered(entries);
-				if (fpMatches && rendered) {
+				const bool forced = ForceReprocessFlag().exchange(false, std::memory_order_relaxed);
+				if (fpMatches && rendered && !forced) {
 					++s.skipped;
 					if (spdlog::should_log(spdlog::level::debug)) {
 						logger::debug("InvalidateMemo: SKIP fp=0x{:x} entries={} unrendered={} countSum={}",
@@ -344,5 +352,10 @@ namespace InventoryInjectorImproved::InvalidateMemo
 	bool IsEnabled()
 	{
 		return EnabledFlag();
+	}
+
+	void ForceReprocess()
+	{
+		ForceReprocessFlag().store(true, std::memory_order_relaxed);
 	}
 }

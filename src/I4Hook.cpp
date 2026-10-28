@@ -9,6 +9,7 @@
 #include "Features.h"
 #include "FrameProbe.h"  // NOLINT(readability-duplicate-include): clang-tidy 21 false positive on Linux clang-cl
 #include "GFxArrayUtil.h"
+#include "InvalidateMemo.h"
 #include "KeywordFill.h"
 
 #include <algorithm>
@@ -780,6 +781,33 @@ namespace InventoryInjectorImproved::I4Hook
 			RE::GFxValue _original;
 			CacheSetter  _setter;
 		};
+
+		template <typename Map>
+		std::size_t EraseByFormID(Map& a_map, std::uint32_t a_formID)
+		{
+			std::size_t cleared = 0;
+			for (auto it = a_map.begin(); it != a_map.end();) {
+				if (DecodeCacheKey(it->first).formID == a_formID) {
+					it = a_map.erase(it);
+					++cleared;
+				} else {
+					++it;
+				}
+			}
+			return cleared;
+		}
+
+		template <typename Func>
+		std::size_t ClearAndForceReprocess(const Func& a_clear)
+		{
+			auto&            hs = State();
+			std::scoped_lock lock(hs.cacheMutex);
+			const auto       cleared = a_clear(hs);
+			if (cleared > 0) {
+				InvalidateMemo::ForceReprocess();
+			}
+			return cleared;
+		}
 	}
 
 	void Inject(RE::GFxMovieView* a_view, const char* a_setterPath)
@@ -828,12 +856,19 @@ namespace InventoryInjectorImproved::I4Hook
 
 	std::size_t ClearCache()
 	{
-		auto&            hs = State();
-		std::scoped_lock lock(hs.cacheMutex);
-		const auto       cleared = hs.cache.size() + hs.dynamicCache.size();
-		hs.cache.clear();
-		hs.dynamicCache.clear();
-		return cleared;
+		return ClearAndForceReprocess([](HookState& a_hs) {
+			const auto cleared = a_hs.cache.size() + a_hs.dynamicCache.size();
+			a_hs.cache.clear();
+			a_hs.dynamicCache.clear();
+			return cleared;
+		});
+	}
+
+	std::size_t InvalidateFormID(std::uint32_t a_formID)
+	{
+		return ClearAndForceReprocess([a_formID](HookState& a_hs) {
+			return EraseByFormID(a_hs.cache, a_formID) + EraseByFormID(a_hs.dynamicCache, a_formID);
+		});
 	}
 
 	CacheStats GetCacheStats()
