@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cctype>
+#include <charconv>
+#include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -22,7 +25,14 @@ namespace InventoryInjectorImproved::Console
 		kEnableCache,
 		kPurge,
 		kMemoOn,
-		kMemoOff
+		kMemoOff,
+		kInvalidate,
+	};
+
+	struct ParsedCommand
+	{
+		Action        action{ Action::kNone };
+		std::uint32_t formID{ 0 };
 	};
 
 	namespace detail
@@ -49,60 +59,121 @@ namespace InventoryInjectorImproved::Console
 			}
 			return tokens;
 		}
+
+		[[nodiscard]] inline std::optional<std::uint32_t> TryParseHexFormID(std::string_view a_token)
+		{
+			if (a_token.size() > 2 && a_token[0] == '0' && a_token[1] == 'x') {
+				a_token.remove_prefix(2);
+			}
+			if (a_token.empty() || a_token.size() > 8) {
+				return std::nullopt;
+			}
+			std::uint32_t     value = 0;
+			const char* const end = a_token.data() + a_token.size();
+			const auto [ptr, ec] = std::from_chars(a_token.data(), end, value, 16);
+			if (ec != std::errc{} || ptr != end) {
+				return std::nullopt;
+			}
+			return value;
+		}
+
+		[[nodiscard]] inline std::optional<Action> MatchToggle(
+			const std::vector<std::string>& a_tokens, std::string_view a_name, Action a_on, Action a_off)
+		{
+			if (a_tokens.size() != 3 || a_tokens[1] != a_name) {
+				return std::nullopt;
+			}
+			if (a_tokens[2] == "on") {
+				return a_on;
+			}
+			if (a_tokens[2] == "off") {
+				return a_off;
+			}
+			return std::nullopt;
+		}
+
+		[[nodiscard]] inline std::optional<Action> MatchCacheCommand(const std::vector<std::string>& a_tokens)
+		{
+			if (a_tokens.size() != 3 || a_tokens[1] != "cache") {
+				return std::nullopt;
+			}
+			if (a_tokens[2] == "disable") {
+				return Action::kDisableCache;
+			}
+			if (a_tokens[2] == "enable") {
+				return Action::kEnableCache;
+			}
+			if (a_tokens[2] == "purge") {
+				return Action::kPurge;
+			}
+			return std::nullopt;
+		}
+
+		[[nodiscard]] inline std::optional<Action> MatchMemoToggle(const std::vector<std::string>& a_tokens)
+		{
+			if (a_tokens.size() != 4 || a_tokens[1] != "skyui" || a_tokens[2] != "inventory-dedupe") {
+				return std::nullopt;
+			}
+			if (a_tokens[3] == "enable") {
+				return Action::kMemoOn;
+			}
+			if (a_tokens[3] == "disable") {
+				return Action::kMemoOff;
+			}
+			return std::nullopt;
+		}
+
+		[[nodiscard]] inline std::optional<ParsedCommand> MatchInvalidate(const std::vector<std::string>& a_tokens)
+		{
+			if (a_tokens.size() != 3 || a_tokens[1] != "invalidate") {
+				return std::nullopt;
+			}
+			if (const auto formID = TryParseHexFormID(a_tokens[2])) {
+				return ParsedCommand{ .action = Action::kInvalidate, .formID = *formID };
+			}
+			return std::nullopt;
+		}
 	}
 
 	/**
 	 * Classify a typed console line. First token != "i5" yields kNone (caller
 	 * falls through to the original command). Subcommands must match exactly.
 	 */
-	[[nodiscard]] inline Action ParseCommand(std::string_view a_line)
+	[[nodiscard]] inline ParsedCommand Classify(std::string_view a_line)
 	{
 		const auto tokens = detail::Tokenize(a_line);
 		if (tokens.empty() || tokens.front() != "i5") {
-			return Action::kNone;
+			return { .action = Action::kNone };
 		}
 		if (tokens.size() == 2 && tokens[1] == "disable") {
-			return Action::kDisableAll;
+			return { .action = Action::kDisableAll };
 		}
 		if (tokens.size() == 2 && tokens[1] == "enable") {
-			return Action::kEnableAll;
+			return { .action = Action::kEnableAll };
 		}
 		if (tokens.size() == 2 && tokens[1] == "status") {
-			return Action::kStatus;
+			return { .action = Action::kStatus };
 		}
-		if (tokens.size() == 3 && tokens[1] == "debug") {
-			if (tokens[2] == "on") {
-				return Action::kDebugOn;
-			}
-			if (tokens[2] == "off") {
-				return Action::kDebugOff;
-			}
+		if (const auto action = detail::MatchToggle(tokens, "debug", Action::kDebugOn, Action::kDebugOff)) {
+			return { .action = *action };
 		}
-		if (tokens.size() == 3 && tokens[1] == "verify") {
-			if (tokens[2] == "on") {
-				return Action::kVerifyOn;
-			}
-			if (tokens[2] == "off") {
-				return Action::kVerifyOff;
-			}
+		if (const auto action = detail::MatchToggle(tokens, "verify", Action::kVerifyOn, Action::kVerifyOff)) {
+			return { .action = *action };
 		}
-		if (tokens.size() == 3 && tokens[1] == "cache" && tokens[2] == "disable") {
-			return Action::kDisableCache;
+		if (const auto action = detail::MatchCacheCommand(tokens)) {
+			return { .action = *action };
 		}
-		if (tokens.size() == 3 && tokens[1] == "cache" && tokens[2] == "enable") {
-			return Action::kEnableCache;
+		if (const auto parsed = detail::MatchInvalidate(tokens)) {
+			return *parsed;
 		}
-		if (tokens.size() == 3 && tokens[1] == "cache" && tokens[2] == "purge") {
-			return Action::kPurge;
+		if (const auto action = detail::MatchMemoToggle(tokens)) {
+			return { .action = *action };
 		}
-		if (tokens.size() == 4 && tokens[1] == "skyui" && tokens[2] == "inventory-dedupe") {
-			if (tokens[3] == "enable") {
-				return Action::kMemoOn;
-			}
-			if (tokens[3] == "disable") {
-				return Action::kMemoOff;
-			}
-		}
-		return Action::kUsage;
+		return { .action = Action::kUsage };
+	}
+
+	[[nodiscard]] inline Action ParseCommand(std::string_view a_line)
+	{
+		return Classify(a_line).action;
 	}
 }
