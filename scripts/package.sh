@@ -6,7 +6,7 @@
 #
 # Usage: ./scripts/package.sh [--build-dir <dir>] [version]
 #   --build-dir  skip cmake build; search <dir> for the DLL instead of build/release-linux
-#   version      optional, e.g. 1.0.0 (default: exact git tag or CMakeLists.txt version)
+#   version      optional, e.g. 1.0.0 (default: exact vX.Y.Z git tag, else 0.0.0)
 
 set -euo pipefail
 
@@ -42,24 +42,20 @@ fi
 
 if [[ ${#positional[@]} -gt 0 ]]; then
     version="${positional[0]}"
-elif git_tag=$(git describe --tags --exact-match 2>/dev/null); then
+elif git_tag=$(git describe --tags --exact-match --match 'v[0-9]*' --exclude 'v*-*' 2>/dev/null); then
     version="${git_tag#v}"
 else
-    version=$(grep -oP '^\s+VERSION\s+\K[0-9]+\.[0-9]+\.[0-9]+' CMakeLists.txt | head -1 || true)
-    if [[ -z "$version" ]]; then
-        echo "Error: could not determine version from CMakeLists.txt"
-        exit 1
-    fi
+    version="0.0.0"
 fi
 
-if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?$ ]]; then
+if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$ ]]; then
     echo "Error: invalid version '${version}' — expected X.Y.Z or X.Y.Z-pre or X.Y.Z+build"
     exit 1
 fi
 
 if [[ -z "$build_dir" ]]; then
     echo "Building..."
-    cmake --preset release-linux
+    cmake --preset release-linux -DI5_VERSION="${version%%[-+]*}"
     cmake --build --preset release-linux
     build_dir="build/release-linux"
 fi

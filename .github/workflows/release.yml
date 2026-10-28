@@ -1,11 +1,30 @@
 name: Release
+run-name: Release ${{ inputs.bump }}${{ inputs.kind == 'test' && ' (test)' || '' }}
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: "release publishes to GitHub and Nexus; test publishes a GitHub prerelease only"
+        type: choice
+        options:
+          - release
+          - test
+        default: release
+      bump:
+        description: "patch, minor, major, or X.Y.Z"
+        type: string
+        default: patch
+      label:
+        description: "Test builds only: tag suffix, e.g. vr-support"
+        type: string
+        default: test
 
 permissions: {}
+
+concurrency:
+  group: ${{ inputs.kind == 'release' && 'release' || github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -16,19 +35,46 @@ jobs:
       actions: write
 
     steps:
+      - name: Check branch
+        if: inputs.kind == 'release' && github.ref != 'refs/heads/main'
+        shell: bash
+        run: |
+          echo 'Error: releases must run from main; use kind=test for other branches' >&2
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          fetch-tags: true
           submodules: recursive
 
       - name: Determine version
         id: version
-        shell: pwsh
+        shell: bash
         env:
-          GH_REF_NAME: ${{ github.ref_name }}
+          KIND: ${{ inputs.kind }}
+          BUMP: ${{ inputs.bump }}
+          LABEL: ${{ inputs.label }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
-          $v = $env:GH_REF_NAME -replace '^v', ''
-          echo "value=$v" >> $env:GITHUB_OUTPUT
+          BASE=$(bash scripts/next-version.sh "${BUMP}")
+          if [[ "${KIND}" == "release" ]]; then
+            VALUE="${BASE}"
+            BUILD="${BASE}"
+          else
+            if [[ ! "${LABEL}" =~ ^[a-z0-9-]+$ ]]; then
+              echo "Error: label must match [a-z0-9-]+, got '${LABEL}'" >&2
+              exit 1
+            fi
+            VALUE="${BASE}-${LABEL}.${RUN_NUMBER}"
+            # The co-save stamp packs the fourth component into 8 bits.
+            BUILD="${BASE}.$((RUN_NUMBER % 255 + 1))"
+          fi
+          {
+            echo "previous=$(git tag --list | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || true)"
+            echo "build=${BUILD}"
+            echo "value=${VALUE}"
+          } >> "${GITHUB_OUTPUT}"
 
       - name: Install CMake and Ninja
         uses: lukka/get-cmake@latest
@@ -51,6 +97,7 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: release-windows
+          configurePresetAdditionalArgs: "['-DI5_VERSION=${{ steps.version.outputs.build }}']"
           buildPreset: release-windows
         env:
           VCPKG_BINARY_SOURCES: "clear;files,C:\\vcpkg-cache,readwrite"
@@ -65,6 +112,11 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: v${{ steps.version.outputs.value }}
+          target_commitish: ${{ github.sha }}
+          prerelease: ${{ inputs.kind == 'test' }}
+          make_latest: ${{ inputs.kind == 'release' }}
+          previous_tag: ${{ steps.version.outputs.previous }}
           files: |
             ${{ steps.package.outputs.zip }}
             build/msvc/*.pdb
