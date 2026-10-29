@@ -237,13 +237,10 @@ namespace InventoryInjectorImproved::InvalidateMemo
 
 				/**
 				 * ItemMenu.as's RestoreIndices sets a one-shot onInvalidate to restore
-				 * scroll/selection after suspend; skipping here would drop it silently.
+				 * scroll/selection after suspend; skipping this call would drop it silently.
 				 */
 				RE::GFxValue onInvalidate;
-				if (itemList.GetMember("onInvalidate", &onInvalidate) && !onInvalidate.IsUndefined()) {
-					InvokeOriginal(a_params);
-					return;
-				}
+				const bool   callbackPending = itemList.GetMember("onInvalidate", &onInvalidate) && !onInvalidate.IsUndefined();
 
 				const std::vector<FpEntry> entries = ReadEntries(itemList);
 				const FpConfig             config = ReadConfig(itemList);
@@ -253,7 +250,7 @@ namespace InventoryInjectorImproved::InvalidateMemo
 				const bool fpMatches = s.lastProcessedFp && fp == *s.lastProcessedFp;
 				const bool rendered = ListAlreadyRendered(entries);
 				const bool forced = ForceReprocessFlag().exchange(false, std::memory_order_relaxed);
-				if (fpMatches && rendered && !forced) {
+				if (fpMatches && rendered && !forced && !callbackPending) {
 					++s.skipped;
 					if (spdlog::should_log(spdlog::level::debug)) {
 						logger::debug("InvalidateMemo: SKIP fp=0x{:x} entries={} unrendered={} countSum={}",
@@ -266,20 +263,28 @@ namespace InventoryInjectorImproved::InvalidateMemo
 				const bool invoked = InvokeOriginal(a_params);
 				++s.processed;
 				/**
-				 * Record the settled post-process fingerprint, not the pre-process one:
-				 * data processors mutate hashed fields (e.g. book flags) during the pass.
-				 * Skip recording on invoke failure so a failed pass can't look settled.
+				 * A failed invoke may have half-processed the list, so forget the last
+				 * fingerprint rather than let the next call match it and be skipped.
 				 */
-				if (invoked) {
-					const std::uint64_t postFp = ComputeFingerprint(itemList);
-					if (spdlog::should_log(spdlog::level::debug)) {
-						logger::debug(
-							"InvalidateMemo: PROCESS fp=0x{:x}->0x{:x} entries={} unrendered={} countSum={} "
-							"fpMatched={} rendered={}",
-							fp, postFp, entries.size(), UnrenderedCount(entries), CountChecksum(entries), fpMatches, rendered);
-					}
-					s.lastProcessedFp = postFp;
+				if (!invoked) {
+					s.lastProcessedFp.reset();
+					LogTally(s);
+
+					return;
 				}
+				/**
+				 * Record the settled post-process fingerprint, not the pre-process one:
+				 * data processors mutate hashed fields (e.g. book flags) while running.
+				 */
+				const std::uint64_t postFp = ComputeFingerprint(itemList);
+				if (spdlog::should_log(spdlog::level::debug)) {
+					logger::debug(
+						"InvalidateMemo: PROCESS fp=0x{:x}->0x{:x} entries={} unrendered={} countSum={} "
+						"fpMatched={} rendered={} callbackPending={}",
+						fp, postFp, entries.size(), UnrenderedCount(entries), CountChecksum(entries), fpMatches, rendered,
+						callbackPending);
+				}
+				s.lastProcessedFp = postFp;
 				LogTally(s);
 			}
 
