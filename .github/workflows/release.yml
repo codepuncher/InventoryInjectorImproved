@@ -43,7 +43,7 @@ jobs:
           exit 1
 
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-tags: true
           submodules: recursive
@@ -77,24 +77,24 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
 
       - name: Install CMake and Ninja
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@fffaaafeea488556c2c12dad60690008bc1caacb # v4.4.2
 
       - name: Restore vcpkg binary cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: C:\vcpkg-cache
           key: vcpkg-${{ hashFiles('vcpkg.json', 'cmake/triplets/**', 'cmake/ports/**') }}
           restore-keys: vcpkg-
 
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
+        uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11.6
         with:
           vcpkgDirectory: ${{ github.workspace }}/lib/vcpkg
         env:
           VCPKG_BINARY_SOURCES: "clear;files,C:\\vcpkg-cache,readwrite"
 
       - name: Configure and Build
-        uses: lukka/run-cmake@v10
+        uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
         with:
           configurePreset: release-windows
           configurePresetAdditionalArgs: "['-DI5_VERSION=${{ steps.version.outputs.build }}']"
@@ -110,7 +110,7 @@ jobs:
         run: bash scripts/package.sh --build-dir build/msvc "$VERSION"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: v${{ steps.version.outputs.value }}
           target_commitish: ${{ github.sha }}
