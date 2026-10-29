@@ -139,7 +139,7 @@ jobs:
           printf '%s\n' "$DELIM" >> "$GITHUB_OUTPUT"
 
       - name: Upload to Nexus Mods
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.10
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.11
         with:
           api_key: ${{ secrets.NEXUSMODS_API_KEY }}
           file_id: ${{ secrets.NEXUSMODS_FILE_ID }}
