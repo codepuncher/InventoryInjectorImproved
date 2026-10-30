@@ -95,12 +95,6 @@ void OnDataLoaded()
 	if (auto* ui = RE::UI::GetSingleton()) {
 		ui->AddEventSink<RE::MenuOpenCloseEvent>(&menuSink);
 	}
-
-	const auto* plugin = SKSE::PluginDeclaration::GetSingleton();
-	const auto  name = plugin ? plugin->GetName() : "Plugin";
-	if (auto* const console = RE::ConsoleLog::GetSingleton()) {
-		console->Print("[%s] Loaded successfully!", std::string(name).c_str());
-	}
 }
 
 SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
